@@ -23,12 +23,12 @@ func NewThumbnailer(
 	db db.DB,
 	nc *nats.Conn,
 	thumber thumber.Thumber,
-	log *zap.SugaredLogger) (*Thumbnailer, error) {
+	log *zap.Logger) (*Thumbnailer, error) {
 	return &Thumbnailer{
 		db:      db,
 		nc:      nc,
 		thumber: thumber,
-		log:     log,
+		log:     log.Sugar(),
 	}, nil
 }
 

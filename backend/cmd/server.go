@@ -3,19 +3,15 @@ package cmd
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/jj-style/eventpix/backend/internal/data/db"
-	"github.com/jj-style/eventpix/backend/internal/events"
-	"github.com/jj-style/eventpix/backend/internal/server"
-	"github.com/jj-style/eventpix/backend/internal/service"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // serverCmd represents the server command
@@ -28,30 +24,20 @@ var serverCmd = &cobra.Command{
 func runServer(cmd *cobra.Command, args []string) {
 	logger := initLogger()
 	defer logger.Sync() // flushes buffer, if any
-	sugar := logger.Sugar()
 
-	db, cleanup, err := db.NewDb(cfg, logger)
+	srv, cleanup, err := initializeServer(cfg, &cfg.Nats, logger)
 	if err != nil {
-		sugar.Fatalf("initialising database: %v", err)
+		logger.Fatal("initializating server", zap.Error(err))
 	}
 	defer cleanup()
 
-	nc, cleanup1, err := events.NewNats(&cfg.Nats)
-	if err != nil {
-		sugar.Fatalf("initialising nats: %v", err)
-	}
-	defer cleanup1()
-
-	svc := service.NewPictureServiceServer(logger, db, nc)
-	srv := server.NewServer(cfg, svc, logger)
-
 	// fmt.Println("Listening on", cfg.Server.Address)
-	sugar.Infof("listening on %s", cfg.Server.Address)
+	logger.Info("listening on", zap.String("address", cfg.Server.Address))
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("HTTP listen and serve: %v", err)
+			logger.Fatal("HTTP listen and serve", zap.Error(err))
 		}
 	}()
 
@@ -59,7 +45,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("HTTP shutdown: %v", err) //nolint:gocritic
+		logger.Fatal("HTTP shutdown", zap.Error(err))
 	}
 }
 

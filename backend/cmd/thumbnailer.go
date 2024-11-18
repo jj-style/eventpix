@@ -6,11 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/jj-style/eventpix/backend/internal/data/db"
-	"github.com/jj-style/eventpix/backend/internal/events"
-	"github.com/jj-style/eventpix/backend/internal/pkg/thumber"
-	"github.com/jj-style/eventpix/backend/internal/service"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 // thumbnailerCmd represents the thumbnailer command
@@ -24,32 +21,19 @@ var thumbnailerCmd = &cobra.Command{
 func runThumbnailer(cmd *cobra.Command, args []string) {
 	logger := initLogger()
 	defer logger.Sync() // flushes buffer, if any
-	sugar := logger.Sugar()
 
-	db, cleanup, err := db.NewDb(cfg, logger)
+	thumbnailer, cleanup, err := initializeThumbnailer(cfg, &cfg.Nats, logger)
 	if err != nil {
-		sugar.Fatalf("initialising database: %v", err)
+		logger.Fatal("creating thumbnailer: %v", zap.Error(err))
 	}
 	defer cleanup()
-
-	nc, cleanup1, err := events.NewNats(&cfg.Nats)
-	if err != nil {
-		sugar.Fatalf("connecting to nats: %v", err)
-	}
-	defer cleanup1()
-
-	thumber := thumber.NewThumber()
-
-	thumbnailer, err := service.NewThumbnailer(db, nc, thumber, sugar)
-	if err != nil {
-		sugar.Fatalf("creating thumbnailer: %v", err)
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go func() {
+		logger.Info("starting thumbailer service")
 		if err := thumbnailer.Start(ctx); err != nil {
-			sugar.Fatalf("starting thumbnailer: %v", err)
+			logger.Fatal("starting thumbnailer", zap.Error(err))
 		}
 	}()
 
@@ -58,7 +42,7 @@ func runThumbnailer(cmd *cobra.Command, args []string) {
 	<-signals
 	// cleanup
 	if err := thumbnailer.Stop(); err != nil {
-		sugar.Fatalf("stopping thumbnailer: %v", err)
+		logger.Fatal("stopping thumbnailer", zap.Error(err))
 	}
 }
 

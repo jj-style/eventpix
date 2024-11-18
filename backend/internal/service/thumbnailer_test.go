@@ -37,7 +37,7 @@ func TestThumbnailer(t *testing.T) {
 		mdb,
 		nc,
 		mthumb,
-		zap.NewNop().Sugar())
+		zap.NewNop())
 	is.NoError(err)
 
 	is.NoError(thumber.Start(context.Background()))
