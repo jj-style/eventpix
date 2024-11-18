@@ -25,7 +25,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	logger := initLogger()
 	defer logger.Sync() // flushes buffer, if any
 
-	srv, cleanup, err := initializeServer(cfg, &cfg.Nats, logger)
+	srv, cleanup, err := initializeServer(cfg, logger)
 	if err != nil {
 		logger.Fatal("initializating server", zap.Error(err))
 	}

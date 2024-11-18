@@ -22,7 +22,7 @@ func runThumbnailer(cmd *cobra.Command, args []string) {
 	logger := initLogger()
 	defer logger.Sync() // flushes buffer, if any
 
-	thumbnailer, cleanup, err := initializeThumbnailer(cfg, &cfg.Nats, logger)
+	thumbnailer, cleanup, err := initializeThumbnailer(cfg, logger)
 	if err != nil {
 		logger.Fatal("creating thumbnailer: %v", zap.Error(err))
 	}

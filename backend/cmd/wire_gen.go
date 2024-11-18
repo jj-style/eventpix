@@ -19,12 +19,14 @@ import (
 
 // Injectors from wire.go:
 
-func initializeServer(cfg2 *config.Config, ncfg *config.Nats, logger *zap.Logger) (*http.Server, func(), error) {
-	dbDB, cleanup, err := db.NewDb(cfg2, logger)
+func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*http.Server, func(), error) {
+	database := config.DatabaseProvider(cfg2)
+	dbDB, cleanup, err := db.NewDb(database, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	conn, cleanup2, err := events.NewNats(ncfg)
+	nats := config.NatsProvider(cfg2)
+	conn, cleanup2, err := events.NewNats(nats)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -37,12 +39,14 @@ func initializeServer(cfg2 *config.Config, ncfg *config.Nats, logger *zap.Logger
 	}, nil
 }
 
-func initializeThumbnailer(cfg2 *config.Config, ncfg *config.Nats, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
-	dbDB, cleanup, err := db.NewDb(cfg2, logger)
+func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
+	database := config.DatabaseProvider(cfg2)
+	dbDB, cleanup, err := db.NewDb(database, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	conn, cleanup2, err := events.NewNats(ncfg)
+	nats := config.NatsProvider(cfg2)
+	conn, cleanup2, err := events.NewNats(nats)
 	if err != nil {
 		cleanup()
 		return nil, nil, err

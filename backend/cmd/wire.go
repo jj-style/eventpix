@@ -18,10 +18,10 @@ import (
 	"go.uber.org/zap"
 )
 
-func initializeServer(cfg *config.Config, ncfg *config.Nats, logger *zap.Logger) (*http.Server, func(), error) {
-	panic(wire.Build(db.NewDb, events.NewNats, service.NewPictureServiceServer, server.NewServer))
+func initializeServer(cfg *config.Config, logger *zap.Logger) (*http.Server, func(), error) {
+	panic(wire.Build(config.Provider, db.NewDb, events.NewNats, service.NewPictureServiceServer, server.NewServer))
 }
 
-func initializeThumbnailer(cfg *config.Config, ncfg *config.Nats, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
-	panic(wire.Build(db.NewDb, events.NewNats, thumber.NewThumber, service.NewThumbnailer))
+func initializeThumbnailer(cfg *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
+	panic(wire.Build(config.Provider, db.NewDb, events.NewNats, thumber.NewThumber, service.NewThumbnailer))
 }

@@ -28,17 +28,15 @@ type dbImpl struct {
 	log *zap.SugaredLogger
 }
 
-func NewDb(cfg *config.Config, logger *zap.Logger) (DB, func(), error) {
-	dbCfg := cfg.Database
-
+func NewDb(cfg *config.Database, logger *zap.Logger) (DB, func(), error) {
 	var dialector gorm.Dialector
-	switch dbCfg.Driver {
+	switch cfg.Driver {
 	case "sqlite":
-		dialector = sqlite.Open(dbCfg.Uri)
+		dialector = sqlite.Open(cfg.Uri)
 	case "mysql":
-		dialector = mysql.Open(dbCfg.Uri)
+		dialector = mysql.Open(cfg.Uri)
 	default:
-		return nil, func() {}, fmt.Errorf("unsupported db driver: %s", dbCfg.Driver)
+		return nil, func() {}, fmt.Errorf("unsupported db driver: %s", cfg.Driver)
 	}
 
 	db, err := gorm.Open(dialector, &gorm.Config{})
