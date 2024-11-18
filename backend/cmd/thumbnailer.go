@@ -4,6 +4,7 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"syscall"
@@ -39,22 +40,26 @@ func runThumbnailer(cmd *cobra.Command, args []string) {
 	}
 	defer cleanup1()
 
-	thumbnailer := service.NewThumbnailer(db, nc, sugar)
+	thumbnailer, err := service.NewThumbnailer(db, nc, sugar)
+	if err != nil {
+		sugar.Fatalf("creating thumbnailer: %v", err)
+	}
 
-	var cleanup3 func()
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	go func() {
-		sugar.Info("starting thumbnailer")
-		cleanup3, err = thumbnailer.Run()
-		if err != nil {
-			sugar.Fatalf("error starting thumbnailer: %v", err)
+		if err := thumbnailer.Start(ctx); err != nil {
+			sugar.Fatalf("starting thumbnailer: %v", err)
 		}
 	}()
-	<-signals
-	cleanup3()
-	// cleanup
 
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+	<-signals
+	// cleanup
+	if err := thumbnailer.Stop(); err != nil {
+		sugar.Fatalf("stopping thumbnailer: %v", err)
+	}
 }
 
 func init() {
