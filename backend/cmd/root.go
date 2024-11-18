@@ -15,12 +15,15 @@ import (
 var (
 	cfgFile string
 	cfg     = new(config.Config)
+
+	Version string
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "eventpix",
-	Short: "Backend of eventpix",
+	Use:     "eventpix",
+	Short:   "Backend of eventpix",
+	Version: Version,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

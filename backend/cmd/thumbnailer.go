@@ -1,6 +1,3 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
@@ -11,6 +8,7 @@ import (
 
 	"github.com/jj-style/eventpix/backend/internal/data/db"
 	"github.com/jj-style/eventpix/backend/internal/events"
+	"github.com/jj-style/eventpix/backend/internal/pkg/thumber"
 	"github.com/jj-style/eventpix/backend/internal/service"
 	"github.com/spf13/cobra"
 )
@@ -40,7 +38,9 @@ func runThumbnailer(cmd *cobra.Command, args []string) {
 	}
 	defer cleanup1()
 
-	thumbnailer, err := service.NewThumbnailer(db, nc, sugar)
+	thumber := thumber.NewThumber()
+
+	thumbnailer, err := service.NewThumbnailer(db, nc, thumber, sugar)
 	if err != nil {
 		sugar.Fatalf("creating thumbnailer: %v", err)
 	}
