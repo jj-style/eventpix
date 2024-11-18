@@ -40,8 +40,6 @@ export const PictureService = {
       kind: MethodKind.Unary,
     },
     /**
-     * rpc ListGallery(ListRequest) returns (ListResponse); 
-     *
      * @generated from rpc picture.v1.PictureService.Upload
      */
     upload: {

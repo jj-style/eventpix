@@ -9,7 +9,6 @@ service PictureService {
     rpc GetEvents(GetEventsRequest) returns (GetEventsResponse);
     rpc GetEvent(GetEventRequest) returns (GetEventResponse);
     rpc Upload(UploadRequest) returns (UploadResponse);
-    // rpc ListGallery(ListRequest) returns (ListResponse); 
 }
 
 // Message representing an event
@@ -22,6 +21,7 @@ message Event {
     bool live = 3;
     // File infos in the event
     FileInfosValue file_infos = 4;
+    // Storage for the event
     oneof storage {
         Filesystem filesystem = 5;
     }
@@ -34,8 +34,8 @@ message FileInfosValue {
 
 // Message representing file information
 message FileInfo {
-    // Id of the file stored
-    string id = 1;
+    // Name of the file stored
+    string name = 1;
 }
 
 // Create an event where photos will be taken and associated with
@@ -44,6 +44,10 @@ message CreateEventRequest {
     string name = 1;
     // Whether the event is live
     bool live = 2;
+    // Storage for the event
+    oneof storage {
+        Filesystem filesystem = 3;
+    }
 }
 
 // Response from successfully creating an event

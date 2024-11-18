@@ -11,36 +11,38 @@ import (
 	"time"
 
 	"github.com/jj-style/eventpix/backend/internal/data/db"
+	"github.com/jj-style/eventpix/backend/internal/events"
 	"github.com/jj-style/eventpix/backend/internal/server"
 	"github.com/jj-style/eventpix/backend/internal/service"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"go.uber.org/zap"
 )
 
 // serverCmd represents the server command
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Runs the main eventpix server",
-	Run:   run,
+	Run:   runServer,
 }
 
-func run(cmd *cobra.Command, args []string) {
-	var logger *zap.Logger
-	if cfg.Server.Environment == "development" {
-		logger, _ = zap.NewDevelopment(zap.AddStacktrace(zap.DPanicLevel))
-	} else {
-		logger, _ = zap.NewProduction(zap.AddStacktrace(zap.DPanicLevel))
-	}
+func runServer(cmd *cobra.Command, args []string) {
+	logger := initLogger()
 	defer logger.Sync() // flushes buffer, if any
 	sugar := logger.Sugar()
 
 	db, cleanup, err := db.NewDb(cfg, logger)
 	if err != nil {
-		log.Fatalf("initialising database: %v", err)
+		sugar.Fatalf("initialising database: %v", err)
 	}
 	defer cleanup()
-	svc := service.NewPictureServiceServer(logger, db)
+
+	nc, cleanup1, err := events.NewNats(&cfg.Nats)
+	if err != nil {
+		sugar.Fatalf("initialising nats: %v", err)
+	}
+	defer cleanup1()
+
+	svc := service.NewPictureServiceServer(logger, db, nc)
 	srv := server.NewServer(cfg, svc, logger)
 
 	// fmt.Println("Listening on", cfg.Server.Address)

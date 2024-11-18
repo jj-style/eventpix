@@ -1,6 +1,8 @@
 server:
   address: localhost:8080
   environment: development
-  database:
-    driver: sqlite
-    uri: test.db # file::memory:?cache=shared
+database:
+  driver: sqlite
+  uri: test.db # file::memory:?cache=shared
+nats:
+  url: "127.0.0.1:4222"

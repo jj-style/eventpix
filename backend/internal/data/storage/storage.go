@@ -13,5 +13,4 @@ var (
 type Storage interface {
 	Store(context.Context, string, io.Reader) error
 	Get(context.Context, string) (io.ReadCloser, error)
-	List(context.Context) ([]io.ReadCloser, error)
 }

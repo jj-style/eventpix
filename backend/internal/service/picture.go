@@ -3,36 +3,52 @@ package service
 import (
 	"bytes"
 	"context"
+	"errors"
 
 	"connectrpc.com/connect"
+	eventsv1 "github.com/jj-style/eventpix/backend/gen/events/v1"
 	picturev1 "github.com/jj-style/eventpix/backend/gen/picture/v1"
 	"github.com/jj-style/eventpix/backend/gen/picture/v1/picturev1connect"
 	"github.com/jj-style/eventpix/backend/internal/data/db"
 	"github.com/jj-style/eventpix/backend/internal/prodto"
+	"github.com/nats-io/nats.go"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/proto"
 )
 
 type pictureServiceServer struct {
 	log *zap.SugaredLogger
 	db  db.DB
 	picturev1connect.UnimplementedPictureServiceHandler
+	nc *nats.Conn
 }
 
-func NewPictureServiceServer(logger *zap.Logger, db db.DB) picturev1connect.PictureServiceHandler {
+func NewPictureServiceServer(logger *zap.Logger, db db.DB, nc *nats.Conn) picturev1connect.PictureServiceHandler {
 	return &pictureServiceServer{
 		log: logger.Sugar(),
 		db:  db,
+		nc:  nc,
 	}
 }
 
 func (p *pictureServiceServer) CreateEvent(ctx context.Context, req *connect.Request[picturev1.CreateEventRequest]) (*connect.Response[picturev1.CreateEventResponse], error) {
 	msg := req.Msg
 	p.log.Infow("creating event", "name", msg.GetName())
-	id, err := p.db.CreateEvent(ctx, &db.Event{
+	createEvent := &db.Event{
 		Name: msg.GetName(),
 		Live: msg.GetLive(),
-	})
+	}
+	switch st := msg.GetStorage().(type) {
+	// TODO(jj) - put storage into db
+	case *picturev1.CreateEventRequest_Filesystem:
+		createEvent.FileSystemStorage = &db.FileSystemStorage{
+			Directory: st.Filesystem.GetDirectory(),
+		}
+	default:
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("unsupported storage type"))
+	}
+	id, err := p.db.CreateEvent(ctx, createEvent)
 
 	if err != nil {
 		p.log.Errorf("error creating event: %w", err)
@@ -81,21 +97,18 @@ func (p *pictureServiceServer) Upload(ctx context.Context, req *connect.Request[
 	}
 	if err := p.db.AddFileInfo(ctx, &db.FileInfo{
 		EventID: uint(req.Msg.GetEventId()),
-		StoreID: req.Msg.GetFile().GetName(),
+		Name:    req.Msg.GetFile().GetName(),
 	}); err != nil {
 		p.log.Errorf("error storing file info: %w", err)
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
+	newPhotoMsg := &eventsv1.NewPhoto{
+		EventId:  uint64(req.Msg.GetEventId()),
+		Filename: req.Msg.GetFile().GetName(),
+	}
+	p.nc.Publish("new-photo", lo.Must(proto.Marshal(newPhotoMsg)))
+
 	resp := &picturev1.UploadResponse{}
 	return connect.NewResponse(resp), nil
 }
-
-// func (p *pictureServiceServer) ListGallery(ctx context.Context, req *connect.Request[picturev1.ListRequest]) (*connect.Response[picturev1.ListResponse], error) {
-// 	images, err := p.store.List()
-// 	if err != nil {
-// 		return nil, connect.NewError(connect.CodeInternal, err)
-// 	}
-// 	p.log.Infof("returning %d images", len(images))
-// 	return connect.NewResponse(&picturev1.ListResponse{Files: images}), nil
-// }

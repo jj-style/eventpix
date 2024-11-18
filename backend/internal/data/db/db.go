@@ -28,7 +28,7 @@ type dbImpl struct {
 }
 
 func NewDb(cfg *config.Config, logger *zap.Logger) (DB, func(), error) {
-	dbCfg := cfg.Server.Database
+	dbCfg := cfg.Database
 
 	var dialector gorm.Dialector
 	switch dbCfg.Driver {

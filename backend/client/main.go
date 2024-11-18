@@ -21,6 +21,11 @@ func createEvent() *picturev1.CreateEventResponse {
 	got := lo.Must(client.CreateEvent(ctx, connect.NewRequest(&picturev1.CreateEventRequest{
 		Name: "my event",
 		Live: false,
+		Storage: &picturev1.CreateEventRequest_Filesystem{
+			Filesystem: &picturev1.Filesystem{
+				Directory: "/ramdisk",
+			},
+		},
 	})))
 	fmt.Printf("==> created %+v\n", got.Msg)
 	return got.Msg
@@ -42,8 +47,8 @@ func getEvent(id uint) *picturev1.Event {
 
 func upload(evt uint64) {
 	requests := []*picturev1.UploadRequest{
-		{File: &picturev1.File{Name: "file1"}, EventId: evt},
-		{File: &picturev1.File{Name: "file2"}, EventId: evt},
+		{File: &picturev1.File{Name: "file1", Data: []byte("hello world")}, EventId: evt},
+		{File: &picturev1.File{Name: "file2", Data: []byte("more data")}, EventId: evt},
 	}
 	for _, req := range requests {
 		resp, err := client.Upload(ctx, connect.NewRequest(req))
@@ -55,8 +60,8 @@ func upload(evt uint64) {
 }
 
 func main() {
-	// createEvent()
+	createEvent()
 	getEvents()
-	// upload(1)
 	getEvent(1)
+	upload(1)
 }

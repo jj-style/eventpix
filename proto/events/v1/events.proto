@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package events.v1;
+
+// Message emitted when a new photo is created
+message NewPhoto {
+  // Identifier of the event the photo was created in
+  uint64 event_id = 1;
+  // Name of the photo
+  string filename = 2;
+}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/adrg/xdg"
 	"github.com/jj-style/eventpix/backend/internal/config"
+	"github.com/nats-io/nats.go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -50,6 +51,7 @@ func initConfig() {
 		viper.AddConfigPath(filepath.Join(xdg.ConfigHome, "eventpix"))
 		viper.AddConfigPath(".") // optionally look for config in the working directory
 	}
+	viper.SetDefault("nats.url", nats.DefaultURL)
 
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("Can't read config:", err)

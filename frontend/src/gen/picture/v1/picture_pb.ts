@@ -42,6 +42,8 @@ export class Event extends Message<Event> {
   fileInfos?: FileInfosValue;
 
   /**
+   * Storage for the event
+   *
    * @generated from oneof picture.v1.Event.storage
    */
   storage: {
@@ -130,11 +132,11 @@ export class FileInfosValue extends Message<FileInfosValue> {
  */
 export class FileInfo extends Message<FileInfo> {
   /**
-   * Id of the file stored
+   * Name of the file stored
    *
-   * @generated from field: string id = 1;
+   * @generated from field: string name = 1;
    */
-  id = "";
+  name = "";
 
   constructor(data?: PartialMessage<FileInfo>) {
     super();
@@ -144,7 +146,7 @@ export class FileInfo extends Message<FileInfo> {
   static readonly runtime: typeof proto3 = proto3;
   static readonly typeName = "picture.v1.FileInfo";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
-    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): FileInfo {
@@ -184,6 +186,19 @@ export class CreateEventRequest extends Message<CreateEventRequest> {
    */
   live = false;
 
+  /**
+   * Storage for the event
+   *
+   * @generated from oneof picture.v1.CreateEventRequest.storage
+   */
+  storage: {
+    /**
+     * @generated from field: picture.v1.Filesystem filesystem = 3;
+     */
+    value: Filesystem;
+    case: "filesystem";
+  } | { case: undefined; value?: undefined } = { case: undefined };
+
   constructor(data?: PartialMessage<CreateEventRequest>) {
     super();
     proto3.util.initPartial(data, this);
@@ -194,6 +209,7 @@ export class CreateEventRequest extends Message<CreateEventRequest> {
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "name", kind: "scalar", T: 9 /* ScalarType.STRING */ },
     { no: 2, name: "live", kind: "scalar", T: 8 /* ScalarType.BOOL */ },
+    { no: 3, name: "filesystem", kind: "message", T: Filesystem, oneof: "storage" },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): CreateEventRequest {

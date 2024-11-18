@@ -16,13 +16,14 @@ type Event struct {
 	storage.Storage `gorm:"-"`
 	// All available storage options for the event
 	// Only one should be set, the rest must be null
-	*FileSystemStorage
+	FileSystemStorage *FileSystemStorage
 }
 
 type FileInfo struct {
 	gorm.Model
-	EventID uint
-	StoreID string
+	EventID   uint
+	Name      string
+	Thumbnail bool
 }
 
 type User struct {
