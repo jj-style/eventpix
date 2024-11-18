@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package picture.v1;
+
+message Filesystem {
+    string directory = 1;
+}

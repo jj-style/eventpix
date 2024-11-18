@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package picture.v1;
+
+import "picture/v1/storage.proto";
+
+service PictureService {
+    rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+    rpc GetEvents(GetEventsRequest) returns (GetEventsResponse);
+    rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+    rpc Upload(UploadRequest) returns (UploadResponse);
+    // rpc ListGallery(ListRequest) returns (ListResponse); 
+}
+
+// Message representing an event
+message Event {
+    // Identifier of the event
+    uint64  id = 1;
+    // Name of the event
+    string name = 2;
+    // Whether the event is live
+    bool live = 3;
+    // File infos in the event
+    FileInfosValue file_infos = 4;
+    oneof storage {
+        Filesystem filesystem = 5;
+    }
+}
+
+// Wrapper around a list of FileInfo
+message FileInfosValue {
+    repeated FileInfo value = 1;
+}
+
+// Message representing file information
+message FileInfo {
+    // Id of the file stored
+    string id = 1;
+}
+
+// Create an event where photos will be taken and associated with
+message CreateEventRequest {
+    // Name of the event
+    string name = 1;
+    // Whether the event is live
+    bool live = 2;
+}
+
+// Response from successfully creating an event
+message CreateEventResponse {
+    // Identifier of the event created
+    uint64 id = 1;
+}
+
+// Message to query available events
+message GetEventsRequest {}
+
+// Message containings events queries
+message GetEventsResponse {
+    // List of events
+    repeated Event events = 1;
+}
+
+// 
+message GetEventRequest{
+    uint64 id = 1;
+}
+
+message GetEventResponse{
+    Event event = 1;
+}
+
+// Message to upload a file to an event
+message UploadRequest {
+    // Event the file is a part of
+    uint64 event_id = 1;
+    // The file to upload
+    File file = 2;
+}
+
+// File to upload
+message File {
+    // The name of the file
+    string name = 1;
+    // The files data in bytes
+    bytes data = 2;
+}
+
+message UploadResponse {}
+
+// message ListRequest {}
+
+// message ListResponse{
+//     repeated File files = 1;
+// }

@@ -1,0 +1,6 @@
+server:
+  address: localhost:8080
+  environment: development
+  database:
+    driver: sqlite
+    uri: test.db # file::memory:?cache=shared
