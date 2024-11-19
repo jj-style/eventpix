@@ -40,10 +40,9 @@ func (t *Thumbnailer) Start(ctx context.Context, workers int) error {
 	}
 
 	for i := 0; i < workers; i++ {
-
+		i := i
 		go func() {
-
-			t.log.Info("running thumbnailer")
+			t.log.Infof("running thumbnailer %d", i)
 			for msg := range messages {
 				go func() {
 					if err := t.Thumb(ctx, msg); err != nil {
@@ -54,13 +53,11 @@ func (t *Thumbnailer) Start(ctx context.Context, workers int) error {
 					// we need to Acknowledge that we received and processed the message,
 					// otherwise, it will be resent over and over again.
 					msg.Ack()
+					t.log.Infof("message %s handled by worker %d", msg.UUID, i)
 				}()
 			}
 			t.log.Info("ending thumbnailer")
-			// return nil
-
 		}()
-
 	}
 	return nil
 }

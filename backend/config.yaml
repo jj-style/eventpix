@@ -11,4 +11,4 @@ pubsub:
   inProcess: false
   nats:
     url: "127.0.0.1:4222"
-  workers: 3
+  workers: 2
