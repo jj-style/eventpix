@@ -13,27 +13,27 @@ type Thumber interface {
 }
 
 type thumber struct {
-	gen thumbnail.Generator
 }
 
 func NewThumber() Thumber {
-	return &thumber{gen: thumbnail.Generator{
+	return &thumber{}
+}
+func (t *thumber) Thumb(in io.Reader) (io.Reader, error) {
+	gen := thumbnail.Generator{
 		Scaler: "CatmullRom",
 		Width:  64,
 		Height: 64,
-	}}
-}
-func (t *thumber) Thumb(in io.Reader) (io.Reader, error) {
+	}
 	buf, err := io.ReadAll(in)
 	if err != nil {
 		return nil, err
 	}
-	img, err := t.gen.NewImageFromByteArray(buf)
+	img, err := gen.NewImageFromByteArray(buf)
 	if err != nil {
 		return nil, err
 	}
 
-	thumBuf, err := t.gen.CreateThumbnail(img)
+	thumBuf, err := gen.CreateThumbnail(img)
 	if err != nil {
 		return nil, err
 	}

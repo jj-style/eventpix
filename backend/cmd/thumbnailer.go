@@ -24,16 +24,16 @@ func runThumbnailer(cmd *cobra.Command, args []string) {
 
 	thumbnailer, cleanup, err := initializeThumbnailer(cfg, logger)
 	if err != nil {
-		logger.Fatal("creating thumbnailer: %v", zap.Error(err))
+		logger.Fatal("creating thumbnailer", zap.Error(err))
 	}
 	defer cleanup()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
 	go func() {
-		logger.Info("starting thumbailer service")
-		if err := thumbnailer.Start(ctx); err != nil {
-			logger.Fatal("starting thumbnailer", zap.Error(err))
+		if err := thumbnailer.Start(ctx, int(cfg.PubSub.Workers)); err != nil {
+			logger.Fatal("stating thumbnailer", zap.Error(err))
 		}
 	}()
 
@@ -41,9 +41,6 @@ func runThumbnailer(cmd *cobra.Command, args []string) {
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	<-signals
 	// cleanup
-	if err := thumbnailer.Stop(); err != nil {
-		logger.Fatal("stopping thumbnailer", zap.Error(err))
-	}
 }
 
 func init() {

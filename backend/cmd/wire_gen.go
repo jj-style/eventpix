@@ -7,33 +7,40 @@
 package cmd
 
 import (
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/jj-style/eventpix/backend/internal/config"
 	"github.com/jj-style/eventpix/backend/internal/data/db"
-	"github.com/jj-style/eventpix/backend/internal/dependencies"
+	"github.com/jj-style/eventpix/backend/internal/pkg/pubsub"
 	"github.com/jj-style/eventpix/backend/internal/pkg/thumber"
 	"github.com/jj-style/eventpix/backend/internal/server"
 	"github.com/jj-style/eventpix/backend/internal/service"
 	"go.uber.org/zap"
-	"net/http"
 )
 
 // Injectors from wire.go:
 
-func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*http.Server, func(), error) {
+func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func(), error) {
 	database := config.DatabaseProvider(cfg2)
 	dbDB, cleanup, err := db.NewDb(database, logger)
 	if err != nil {
 		return nil, nil, err
 	}
-	nats := config.NatsProvider(cfg2)
-	conn, cleanup2, err := dependencies.NatsProvider(nats)
+	pubSub := config.PubSubProvider(cfg2)
+	publisher, cleanup2, err := pubsub.NewPublisher(pubSub)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	pictureServiceHandler := service.NewPictureServiceServer(logger, dbDB, conn)
+	pictureServiceHandler := service.NewPictureServiceServer(logger, dbDB, publisher)
 	httpServer := server.NewServer(cfg2, pictureServiceHandler, logger)
-	return httpServer, func() {
+	cmdServerApp, cleanup3, err := newServerApp(cfg2, logger, httpServer, publisher)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	return cmdServerApp, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
@@ -45,14 +52,14 @@ func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Th
 	if err != nil {
 		return nil, nil, err
 	}
-	nats := config.NatsProvider(cfg2)
-	conn, cleanup2, err := dependencies.NatsProvider(nats)
+	thumberThumber := thumber.NewThumber()
+	pubSub := config.PubSubProvider(cfg2)
+	subscriber, cleanup2, err := pubsub.NewSubscriber(pubSub)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
-	thumberThumber := thumber.NewThumber()
-	thumbnailer, err := service.NewThumbnailer(dbDB, conn, thumberThumber, logger)
+	thumbnailer, err := service.NewThumbnailer(dbDB, thumberThumber, subscriber, logger)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -60,6 +67,23 @@ func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Th
 	}
 	return thumbnailer, func() {
 		cleanup2()
+		cleanup()
+	}, nil
+}
+
+func initializeMemThumbnailer(cfg2 *config.Config, logger *zap.Logger, subscriber message.Subscriber) (*service.Thumbnailer, func(), error) {
+	database := config.DatabaseProvider(cfg2)
+	dbDB, cleanup, err := db.NewDb(database, logger)
+	if err != nil {
+		return nil, nil, err
+	}
+	thumberThumber := thumber.NewThumber()
+	thumbnailer, err := service.NewThumbnailer(dbDB, thumberThumber, subscriber, logger)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	return thumbnailer, func() {
 		cleanup()
 	}, nil
 }

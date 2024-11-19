@@ -3,6 +3,12 @@ server:
   environment: development
 database:
   driver: sqlite
-  uri: test.db # file::memory:?cache=shared
-nats:
-  url: "127.0.0.1:4222"
+  uri: test.db
+  # uri: file::memory:?cache=shared
+pubsub:
+  mode: memory
+  # mode: nats
+  inProcess: false
+  nats:
+    url: "127.0.0.1:4222"
+  workers: 3

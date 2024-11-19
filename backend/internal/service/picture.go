@@ -3,33 +3,34 @@ package service
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 
 	"connectrpc.com/connect"
+	"github.com/ThreeDotsLabs/watermill"
+	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/google/uuid"
 	eventsv1 "github.com/jj-style/eventpix/backend/gen/events/v1"
 	picturev1 "github.com/jj-style/eventpix/backend/gen/picture/v1"
 	"github.com/jj-style/eventpix/backend/gen/picture/v1/picturev1connect"
 	"github.com/jj-style/eventpix/backend/internal/data/db"
 	"github.com/jj-style/eventpix/backend/internal/service/prodto"
-	"github.com/nats-io/nats.go"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
-	"google.golang.org/protobuf/proto"
 )
 
 type pictureServiceServer struct {
 	log *zap.SugaredLogger
 	db  db.DB
 	picturev1connect.UnimplementedPictureServiceHandler
-	nc *nats.Conn
+	publisher message.Publisher
 }
 
-func NewPictureServiceServer(logger *zap.Logger, db db.DB, nc *nats.Conn) picturev1connect.PictureServiceHandler {
+func NewPictureServiceServer(logger *zap.Logger, db db.DB, publisher message.Publisher) picturev1connect.PictureServiceHandler {
 	return &pictureServiceServer{
-		log: logger.Sugar(),
-		db:  db,
-		nc:  nc,
+		log:       logger.Sugar(),
+		db:        db,
+		publisher: publisher,
 	}
 }
 
@@ -41,7 +42,6 @@ func (p *pictureServiceServer) CreateEvent(ctx context.Context, req *connect.Req
 		Live: msg.GetLive(),
 	}
 	switch st := msg.GetStorage().(type) {
-	// TODO(jj) - put storage into db
 	case *picturev1.CreateEventRequest_Filesystem:
 		createEvent.FileSystemStorage = &db.FileSystemStorage{
 			Directory: st.Filesystem.GetDirectory(),
@@ -112,7 +112,14 @@ func (p *pictureServiceServer) Upload(ctx context.Context, req *connect.Request[
 		EventId: uint64(req.Msg.GetEventId()),
 		FileId:  id,
 	}
-	p.nc.Publish("new-photo", lo.Must(proto.Marshal(newPhotoMsg)))
+	payload, err := json.Marshal(newPhotoMsg)
+	if err != nil {
+		p.log.Errorf("serializing event message: %v", err)
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if err := p.publisher.Publish("new-photo", message.NewMessage(watermill.NewShortUUID(), payload)); err != nil {
+		p.log.Errorf("publishing new photo event: %v", err)
+	}
 
 	resp := &picturev1.UploadResponse{}
 	return connect.NewResponse(resp), nil
