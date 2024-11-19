@@ -9,7 +9,7 @@ package cmd
 import (
 	"github.com/jj-style/eventpix/backend/internal/config"
 	"github.com/jj-style/eventpix/backend/internal/data/db"
-	"github.com/jj-style/eventpix/backend/internal/events"
+	"github.com/jj-style/eventpix/backend/internal/dependencies"
 	"github.com/jj-style/eventpix/backend/internal/pkg/thumber"
 	"github.com/jj-style/eventpix/backend/internal/server"
 	"github.com/jj-style/eventpix/backend/internal/service"
@@ -26,7 +26,7 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*http.Server, fu
 		return nil, nil, err
 	}
 	nats := config.NatsProvider(cfg2)
-	conn, cleanup2, err := events.NewNats(nats)
+	conn, cleanup2, err := dependencies.NatsProvider(nats)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -46,7 +46,7 @@ func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Th
 		return nil, nil, err
 	}
 	nats := config.NatsProvider(cfg2)
-	conn, cleanup2, err := events.NewNats(nats)
+	conn, cleanup2, err := dependencies.NatsProvider(nats)
 	if err != nil {
 		cleanup()
 		return nil, nil, err

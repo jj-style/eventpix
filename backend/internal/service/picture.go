@@ -10,7 +10,7 @@ import (
 	picturev1 "github.com/jj-style/eventpix/backend/gen/picture/v1"
 	"github.com/jj-style/eventpix/backend/gen/picture/v1/picturev1connect"
 	"github.com/jj-style/eventpix/backend/internal/data/db"
-	"github.com/jj-style/eventpix/backend/internal/prodto"
+	"github.com/jj-style/eventpix/backend/internal/service/prodto"
 	"github.com/nats-io/nats.go"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
