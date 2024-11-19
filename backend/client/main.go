@@ -48,7 +48,7 @@ func getEvent(id uint) *picturev1.Event {
 
 func upload(evt uint64) {
 	requests := []*picturev1.UploadRequest{
-		{File: &picturev1.File{Name: "file1", Data: lo.Must(os.ReadFile("/home/jj/Pictures/wallpaper.png"))}, EventId: evt},
+		{File: &picturev1.File{Name: "file1.png", Data: lo.Must(os.ReadFile("/home/jj/Pictures/wallpaper.png"))}, EventId: evt},
 	}
 	for _, req := range requests {
 		resp, err := client.Upload(ctx, connect.NewRequest(req))

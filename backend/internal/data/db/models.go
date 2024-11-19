@@ -21,6 +21,7 @@ type Event struct {
 
 type FileInfo struct {
 	gorm.Model
+	ID        string
 	EventID   uint
 	Name      string
 	Thumbnail bool

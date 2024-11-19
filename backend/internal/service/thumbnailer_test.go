@@ -49,10 +49,15 @@ func TestThumbnailer(t *testing.T) {
 		Storage: mstorage,
 	}, nil)
 
+	// retrieve the file info
+	mdb.EXPECT().
+		GetFileInfo(mock.Anything, "abc").
+		Return(&db.FileInfo{Name: "file.jpg", Thumbnail: false}, nil)
+
 	// retrieve the original file
 	mockFileData := io.NopCloser(bytes.NewReader([]byte("original file")))
 	mstorage.EXPECT().
-		Get(mock.Anything, "file.jpg").
+		Get(mock.Anything, "abc").
 		Return(mockFileData, nil)
 
 	// create thumbnail from original
@@ -61,13 +66,20 @@ func TestThumbnailer(t *testing.T) {
 		Thumb(mockFileData).
 		Return(mockThumbnailData, nil)
 
+	// store thumbnail info with event
+	mdb.EXPECT().AddFileInfo(mock.Anything, mock.Anything).RunAndReturn(func(ctx context.Context, fi *db.FileInfo) error {
+		is.Equal("thumb_file.jpg", fi.Name)
+		is.True(fi.Thumbnail)
+		return nil
+	})
+
 	// store thumbnail
 	mstorage.EXPECT().
 		Store(mock.Anything, "thumb_file.jpg", mockThumbnailData).
 		Return(nil)
 
 	// act
-	msg := &eventsv1.NewPhoto{Filename: "file.jpg", EventId: 1}
+	msg := &eventsv1.NewPhoto{FileId: "abc", EventId: 1}
 	is.NoError(nc.Publish("new-photo", lo.Must(proto.Marshal(msg))))
 
 	// TODO - this better

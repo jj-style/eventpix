@@ -20,11 +20,11 @@ export class NewPhoto extends Message<NewPhoto> {
   eventId = protoInt64.zero;
 
   /**
-   * Name of the photo
+   * ID of the photo
    *
-   * @generated from field: string filename = 2;
+   * @generated from field: string file_id = 2;
    */
-  filename = "";
+  fileId = "";
 
   constructor(data?: PartialMessage<NewPhoto>) {
     super();
@@ -35,7 +35,7 @@ export class NewPhoto extends Message<NewPhoto> {
   static readonly typeName = "events.v1.NewPhoto";
   static readonly fields: FieldList = proto3.util.newFieldList(() => [
     { no: 1, name: "event_id", kind: "scalar", T: 4 /* ScalarType.UINT64 */ },
-    { no: 2, name: "filename", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+    { no: 2, name: "file_id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
   ]);
 
   static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): NewPhoto {

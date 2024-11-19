@@ -21,6 +21,7 @@ type DB interface {
 	GetEvents(context.Context) ([]*Event, error)
 	GetEvent(context.Context, uint64) (*Event, error)
 	AddFileInfo(context.Context, *FileInfo) error
+	GetFileInfo(context.Context, string) (*FileInfo, error)
 }
 
 type dbImpl struct {
@@ -112,4 +113,19 @@ func (d *dbImpl) AddFileInfo(ctx context.Context, fi *FileInfo) error {
 		return result.Error
 	}
 	return nil
+}
+
+func (d *dbImpl) GetFileInfo(ctx context.Context, id string) (*FileInfo, error) {
+	var fi FileInfo
+	result := d.db.WithContext(ctx).First(&fi, "id = ?", id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			d.log.Errorf("file(%s) not found in db", id)
+			return nil, result.Error
+		} else {
+			d.log.Errorf("getting file(%s) from db: %v", id, result.Error)
+			return nil, result.Error
+		}
+	}
+	return &fi, nil
 }

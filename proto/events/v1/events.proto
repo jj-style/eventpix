@@ -6,6 +6,6 @@ package events.v1;
 message NewPhoto {
   // Identifier of the event the photo was created in
   uint64 event_id = 1;
-  // Name of the photo
-  string filename = 2;
+  // ID of the photo
+  string file_id = 2;
 }

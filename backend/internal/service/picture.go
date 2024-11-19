@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"connectrpc.com/connect"
+	"github.com/google/uuid"
 	eventsv1 "github.com/jj-style/eventpix/backend/gen/events/v1"
 	picturev1 "github.com/jj-style/eventpix/backend/gen/picture/v1"
 	"github.com/jj-style/eventpix/backend/gen/picture/v1/picturev1connect"
@@ -84,6 +85,9 @@ func (p *pictureServiceServer) GetEvents(ctx context.Context, req *connect.Reque
 }
 
 func (p *pictureServiceServer) Upload(ctx context.Context, req *connect.Request[picturev1.UploadRequest]) (*connect.Response[picturev1.UploadResponse], error) {
+	// TODO: mock
+	id := uuid.NewString()
+
 	evt, err := p.db.GetEvent(ctx, req.Msg.GetEventId())
 	if err != nil {
 		p.log.Errorf("getting event to upload to: %v", err)
@@ -96,6 +100,7 @@ func (p *pictureServiceServer) Upload(ctx context.Context, req *connect.Request[
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	if err := p.db.AddFileInfo(ctx, &db.FileInfo{
+		ID:      id,
 		EventID: uint(req.Msg.GetEventId()),
 		Name:    req.Msg.GetFile().GetName(),
 	}); err != nil {
@@ -104,8 +109,8 @@ func (p *pictureServiceServer) Upload(ctx context.Context, req *connect.Request[
 	}
 
 	newPhotoMsg := &eventsv1.NewPhoto{
-		EventId:  uint64(req.Msg.GetEventId()),
-		Filename: req.Msg.GetFile().GetName(),
+		EventId: uint64(req.Msg.GetEventId()),
+		FileId:  id,
 	}
 	p.nc.Publish("new-photo", lo.Must(proto.Marshal(newPhotoMsg)))
 

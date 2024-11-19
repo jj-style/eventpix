@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
 	eventsv1 "github.com/jj-style/eventpix/backend/gen/events/v1"
 	"github.com/jj-style/eventpix/backend/internal/data/db"
 	"github.com/jj-style/eventpix/backend/internal/pkg/thumber"
@@ -61,7 +62,14 @@ func (t *Thumbnailer) processMsg(ctx context.Context) func(*nats.Msg) {
 			return
 		}
 
-		buf, err := evt.Storage.Get(ctx, req.GetFilename())
+		fi, err := t.db.GetFileInfo(ctx, req.GetFileId())
+		if err != nil {
+			t.log.Errorf("getting photo ifno: %v", err)
+			msg.Nak()
+			return
+		}
+
+		buf, err := evt.Storage.Get(ctx, fi.Name)
 		if err != nil {
 			t.log.Errorf("getting photo: %v", err)
 			msg.Nak()
@@ -69,7 +77,7 @@ func (t *Thumbnailer) processMsg(ctx context.Context) func(*nats.Msg) {
 		}
 		defer buf.Close()
 
-		t.log.Infow("creating thumbnail", "file", req.GetFilename())
+		t.log.Info("creating thumbnail")
 		thumnail, err := t.thumber.Thumb(buf)
 		if err != nil {
 			t.log.Errorf("creating thumbnail: %v", err)
@@ -77,7 +85,18 @@ func (t *Thumbnailer) processMsg(ctx context.Context) func(*nats.Msg) {
 			return
 		}
 
-		if err := evt.Storage.Store(ctx, "thumb_"+req.GetFilename(), thumnail); err != nil {
+		if err := t.db.AddFileInfo(ctx, &db.FileInfo{
+			ID:        uuid.NewString(),
+			Name:      "thumb_" + fi.Name,
+			EventID:   uint(req.GetEventId()),
+			Thumbnail: true,
+		}); err != nil {
+			t.log.Errorf("saving thumbnail info to db: %v", err)
+			msg.Nak()
+			return
+		}
+
+		if err := evt.Storage.Store(ctx, "thumb_"+fi.Name, thumnail); err != nil {
 			t.log.Errorf("storing thumbnail: %v", err)
 			msg.Nak()
 			return
