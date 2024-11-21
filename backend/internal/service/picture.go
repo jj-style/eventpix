@@ -124,3 +124,18 @@ func (p *pictureServiceServer) Upload(ctx context.Context, req *connect.Request[
 	resp := &picturev1.UploadResponse{}
 	return connect.NewResponse(resp), nil
 }
+
+func (p *pictureServiceServer) GetThumbnails(ctx context.Context, req *connect.Request[picturev1.GetThumbnailsRequest]) (*connect.Response[picturev1.GetThumbnailsResponse], error) {
+	msg := req.Msg
+
+	thumbnails, err := p.db.GetThumbnails(ctx, uint(msg.GetEventId()), int(msg.GetLimit()), int(msg.GetOffset()))
+	if err != nil {
+		p.log.Errorf("getting thumbnails from db: %v", err)
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+
+	resp := &picturev1.GetThumbnailsResponse{
+		Thumbnails: lo.Map(thumbnails, func(item *db.ThumbnailInfo, _ int) *picturev1.Thumbnail { return prodto.Thumbnail(item) }),
+	}
+	return connect.NewResponse(resp), nil
+}

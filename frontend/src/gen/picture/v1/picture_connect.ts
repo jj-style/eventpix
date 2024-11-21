@@ -3,7 +3,7 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateEventRequest, CreateEventResponse, GetEventRequest, GetEventResponse, GetEventsRequest, GetEventsResponse, UploadRequest, UploadResponse } from "./picture_pb.ts";
+import { CreateEventRequest, CreateEventResponse, GetEventRequest, GetEventResponse, GetEventsRequest, GetEventsResponse, GetThumbnailsRequest, GetThumbnailsResponse, UploadRequest, UploadResponse } from "./picture_pb.ts";
 import { MethodKind } from "@bufbuild/protobuf";
 
 /**
@@ -46,6 +46,15 @@ export const PictureService = {
       name: "Upload",
       I: UploadRequest,
       O: UploadResponse,
+      kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc picture.v1.PictureService.GetThumbnails
+     */
+    getThumbnails: {
+      name: "GetThumbnails",
+      I: GetThumbnailsRequest,
+      O: GetThumbnailsResponse,
       kind: MethodKind.Unary,
     },
   }

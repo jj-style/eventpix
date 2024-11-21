@@ -22,6 +22,8 @@ type DB interface {
 	GetEvent(context.Context, uint64) (*Event, error)
 	AddFileInfo(context.Context, *FileInfo) error
 	GetFileInfo(context.Context, string) (*FileInfo, error)
+	AddThumbnailInfo(context.Context, *ThumbnailInfo) error
+	GetThumbnails(ctx context.Context, eventId uint, limit int, offset int) ([]*ThumbnailInfo, error)
 }
 
 type dbImpl struct {
@@ -50,6 +52,7 @@ func NewDb(cfg *config.Database, logger *zap.Logger) (DB, func(), error) {
 		&User{},
 		&Event{},
 		&FileInfo{},
+		&ThumbnailInfo{},
 		&FileSystemStorage{},
 	); err != nil {
 		return nil, func() {}, fmt.Errorf("migrating db: %w", err)
@@ -128,4 +131,28 @@ func (d *dbImpl) GetFileInfo(ctx context.Context, id string) (*FileInfo, error) 
 		}
 	}
 	return &fi, nil
+}
+
+func (d *dbImpl) AddThumbnailInfo(ctx context.Context, ti *ThumbnailInfo) error {
+	result := d.db.WithContext(ctx).Create(ti)
+	if result.Error != nil {
+		d.log.Error("creating thumbnail info in db: %w", result.Error)
+		return result.Error
+	}
+	return nil
+}
+
+func (d *dbImpl) GetThumbnails(ctx context.Context, eventId uint, limit int, offset int) ([]*ThumbnailInfo, error) {
+	var thumbnails []ThumbnailInfo
+	result := d.db.WithContext(ctx).
+		Offset(offset).
+		Limit(limit).
+		Preload(clause.Associations).
+		Find(&thumbnails, ThumbnailInfo{EventID: eventId}).
+		Order("created_at desc")
+	if result.Error != nil {
+		d.log.Errorf("error querying thumbnails in event(%d): %w", eventId, result.Error)
+		return nil, result.Error
+	}
+	return lo.Map(thumbnails, func(e ThumbnailInfo, _ int) *ThumbnailInfo { return &e }), nil
 }

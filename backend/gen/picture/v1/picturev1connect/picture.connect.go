@@ -43,15 +43,19 @@ const (
 	PictureServiceGetEventProcedure = "/picture.v1.PictureService/GetEvent"
 	// PictureServiceUploadProcedure is the fully-qualified name of the PictureService's Upload RPC.
 	PictureServiceUploadProcedure = "/picture.v1.PictureService/Upload"
+	// PictureServiceGetThumbnailsProcedure is the fully-qualified name of the PictureService's
+	// GetThumbnails RPC.
+	PictureServiceGetThumbnailsProcedure = "/picture.v1.PictureService/GetThumbnails"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
-	pictureServiceServiceDescriptor           = v1.File_picture_v1_picture_proto.Services().ByName("PictureService")
-	pictureServiceCreateEventMethodDescriptor = pictureServiceServiceDescriptor.Methods().ByName("CreateEvent")
-	pictureServiceGetEventsMethodDescriptor   = pictureServiceServiceDescriptor.Methods().ByName("GetEvents")
-	pictureServiceGetEventMethodDescriptor    = pictureServiceServiceDescriptor.Methods().ByName("GetEvent")
-	pictureServiceUploadMethodDescriptor      = pictureServiceServiceDescriptor.Methods().ByName("Upload")
+	pictureServiceServiceDescriptor             = v1.File_picture_v1_picture_proto.Services().ByName("PictureService")
+	pictureServiceCreateEventMethodDescriptor   = pictureServiceServiceDescriptor.Methods().ByName("CreateEvent")
+	pictureServiceGetEventsMethodDescriptor     = pictureServiceServiceDescriptor.Methods().ByName("GetEvents")
+	pictureServiceGetEventMethodDescriptor      = pictureServiceServiceDescriptor.Methods().ByName("GetEvent")
+	pictureServiceUploadMethodDescriptor        = pictureServiceServiceDescriptor.Methods().ByName("Upload")
+	pictureServiceGetThumbnailsMethodDescriptor = pictureServiceServiceDescriptor.Methods().ByName("GetThumbnails")
 )
 
 // PictureServiceClient is a client for the picture.v1.PictureService service.
@@ -60,6 +64,7 @@ type PictureServiceClient interface {
 	GetEvents(context.Context, *connect.Request[v1.GetEventsRequest]) (*connect.Response[v1.GetEventsResponse], error)
 	GetEvent(context.Context, *connect.Request[v1.GetEventRequest]) (*connect.Response[v1.GetEventResponse], error)
 	Upload(context.Context, *connect.Request[v1.UploadRequest]) (*connect.Response[v1.UploadResponse], error)
+	GetThumbnails(context.Context, *connect.Request[v1.GetThumbnailsRequest]) (*connect.Response[v1.GetThumbnailsResponse], error)
 }
 
 // NewPictureServiceClient constructs a client for the picture.v1.PictureService service. By
@@ -96,15 +101,22 @@ func NewPictureServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(pictureServiceUploadMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getThumbnails: connect.NewClient[v1.GetThumbnailsRequest, v1.GetThumbnailsResponse](
+			httpClient,
+			baseURL+PictureServiceGetThumbnailsProcedure,
+			connect.WithSchema(pictureServiceGetThumbnailsMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // pictureServiceClient implements PictureServiceClient.
 type pictureServiceClient struct {
-	createEvent *connect.Client[v1.CreateEventRequest, v1.CreateEventResponse]
-	getEvents   *connect.Client[v1.GetEventsRequest, v1.GetEventsResponse]
-	getEvent    *connect.Client[v1.GetEventRequest, v1.GetEventResponse]
-	upload      *connect.Client[v1.UploadRequest, v1.UploadResponse]
+	createEvent   *connect.Client[v1.CreateEventRequest, v1.CreateEventResponse]
+	getEvents     *connect.Client[v1.GetEventsRequest, v1.GetEventsResponse]
+	getEvent      *connect.Client[v1.GetEventRequest, v1.GetEventResponse]
+	upload        *connect.Client[v1.UploadRequest, v1.UploadResponse]
+	getThumbnails *connect.Client[v1.GetThumbnailsRequest, v1.GetThumbnailsResponse]
 }
 
 // CreateEvent calls picture.v1.PictureService.CreateEvent.
@@ -127,12 +139,18 @@ func (c *pictureServiceClient) Upload(ctx context.Context, req *connect.Request[
 	return c.upload.CallUnary(ctx, req)
 }
 
+// GetThumbnails calls picture.v1.PictureService.GetThumbnails.
+func (c *pictureServiceClient) GetThumbnails(ctx context.Context, req *connect.Request[v1.GetThumbnailsRequest]) (*connect.Response[v1.GetThumbnailsResponse], error) {
+	return c.getThumbnails.CallUnary(ctx, req)
+}
+
 // PictureServiceHandler is an implementation of the picture.v1.PictureService service.
 type PictureServiceHandler interface {
 	CreateEvent(context.Context, *connect.Request[v1.CreateEventRequest]) (*connect.Response[v1.CreateEventResponse], error)
 	GetEvents(context.Context, *connect.Request[v1.GetEventsRequest]) (*connect.Response[v1.GetEventsResponse], error)
 	GetEvent(context.Context, *connect.Request[v1.GetEventRequest]) (*connect.Response[v1.GetEventResponse], error)
 	Upload(context.Context, *connect.Request[v1.UploadRequest]) (*connect.Response[v1.UploadResponse], error)
+	GetThumbnails(context.Context, *connect.Request[v1.GetThumbnailsRequest]) (*connect.Response[v1.GetThumbnailsResponse], error)
 }
 
 // NewPictureServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -165,6 +183,12 @@ func NewPictureServiceHandler(svc PictureServiceHandler, opts ...connect.Handler
 		connect.WithSchema(pictureServiceUploadMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	pictureServiceGetThumbnailsHandler := connect.NewUnaryHandler(
+		PictureServiceGetThumbnailsProcedure,
+		svc.GetThumbnails,
+		connect.WithSchema(pictureServiceGetThumbnailsMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/picture.v1.PictureService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PictureServiceCreateEventProcedure:
@@ -175,6 +199,8 @@ func NewPictureServiceHandler(svc PictureServiceHandler, opts ...connect.Handler
 			pictureServiceGetEventHandler.ServeHTTP(w, r)
 		case PictureServiceUploadProcedure:
 			pictureServiceUploadHandler.ServeHTTP(w, r)
+		case PictureServiceGetThumbnailsProcedure:
+			pictureServiceGetThumbnailsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -198,4 +224,8 @@ func (UnimplementedPictureServiceHandler) GetEvent(context.Context, *connect.Req
 
 func (UnimplementedPictureServiceHandler) Upload(context.Context, *connect.Request[v1.UploadRequest]) (*connect.Response[v1.UploadResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("picture.v1.PictureService.Upload is not implemented"))
+}
+
+func (UnimplementedPictureServiceHandler) GetThumbnails(context.Context, *connect.Request[v1.GetThumbnailsRequest]) (*connect.Response[v1.GetThumbnailsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("picture.v1.PictureService.GetThumbnails is not implemented"))
 }

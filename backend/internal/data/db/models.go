@@ -7,9 +7,10 @@ import (
 
 type Event struct {
 	gorm.Model
-	Name      string
-	Live      bool
-	FileInfos []FileInfo
+	Name           string
+	Live           bool
+	FileInfos      []FileInfo
+	ThumbnailInfos []ThumbnailInfo
 	// TODO: add when some auth middleware
 	// UserID    uint
 
@@ -21,10 +22,18 @@ type Event struct {
 
 type FileInfo struct {
 	gorm.Model
-	ID        string
-	EventID   uint
-	Name      string
-	Thumbnail bool
+	ID      string
+	EventID uint
+	Name    string
+}
+
+type ThumbnailInfo struct {
+	gorm.Model
+	ID         string
+	Name       string
+	EventID    uint
+	FileInfoID string
+	FileInfo   FileInfo
 }
 
 type User struct {

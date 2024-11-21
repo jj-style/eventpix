@@ -95,11 +95,11 @@ func (t *Thumbnailer) Thumb(ctx context.Context, msg *message.Message) error {
 		return err
 	}
 
-	if err := t.db.AddFileInfo(ctx, &db.FileInfo{
-		ID:        uuid.NewString(),
-		Name:      "thumb_" + fi.Name,
-		EventID:   uint(req.GetEventId()),
-		Thumbnail: true,
+	if err := t.db.AddThumbnailInfo(ctx, &db.ThumbnailInfo{
+		ID:         uuid.NewString(),
+		Name:       "thumb_" + fi.Name,
+		EventID:    uint(req.GetEventId()),
+		FileInfoID: fi.ID,
 	}); err != nil {
 		t.log.Errorf("saving thumbnail info to db: %v", err)
 		return err

@@ -46,6 +46,17 @@ func getEvent(id uint) *picturev1.Event {
 	return got.Msg.GetEvent()
 }
 
+func getThumbnails(id uint) {
+	got := lo.Must(client.GetThumbnails(ctx, connect.NewRequest(&picturev1.GetThumbnailsRequest{
+		EventId: uint64(id),
+		Limit:   -1,
+		Offset:  0,
+	})))
+	for _, tb := range got.Msg.GetThumbnails() {
+		fmt.Printf("===> got thumbnail: %+v\n", tb)
+	}
+}
+
 func upload(evt uint64) {
 	requests := []*picturev1.UploadRequest{
 		{File: &picturev1.File{Name: "file1.png", Data: lo.Must(os.ReadFile("/home/jj/Pictures/wallpaper.png"))}, EventId: evt},
@@ -61,8 +72,9 @@ func upload(evt uint64) {
 }
 
 func main() {
-	createEvent()
-	getEvents()
-	getEvent(1)
-	upload(1)
+	// createEvent()
+	// getEvents()
+	// getEvent(1)
+	getThumbnails(1)
+	// upload(1)
 }

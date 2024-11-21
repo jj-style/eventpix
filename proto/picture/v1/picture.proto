@@ -9,6 +9,7 @@ service PictureService {
     rpc GetEvents(GetEventsRequest) returns (GetEventsResponse);
     rpc GetEvent(GetEventRequest) returns (GetEventResponse);
     rpc Upload(UploadRequest) returns (UploadResponse);
+    rpc GetThumbnails(GetThumbnailsRequest) returns (GetThumbnailsResponse);
 }
 
 // Message representing an event
@@ -34,8 +35,10 @@ message FileInfosValue {
 
 // Message representing file information
 message FileInfo {
-    // Name of the file stored
-    string name = 1;
+    // ID of the file stored
+    string id = 1;
+    // Name of the file
+    string name = 2;
 }
 
 // Create an event where photos will be taken and associated with
@@ -92,8 +95,24 @@ message File {
 
 message UploadResponse {}
 
-// message ListRequest {}
+message GetThumbnailsRequest {
+    // Event to query thumbnails for
+    uint64 event_id = 1;
+    // Limit the number of results
+    int64 limit = 2;
+    // Offset to search from
+    int64 offset = 3;
+}
 
-// message ListResponse{
-//     repeated File files = 1;
-// }
+message GetThumbnailsResponse {
+    repeated Thumbnail thumbnails = 1;
+}
+
+message Thumbnail {
+    // ID of the thumbnail
+    string id = 1;
+    // Name of the thumbnail file
+    string name = 2;
+    // File information the thumbnail is for.
+    FileInfo file_info = 3;
+}

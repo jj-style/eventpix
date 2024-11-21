@@ -22,6 +22,7 @@ func Event(e *db.Event, withFileInfos bool) *picturev1.Event {
 
 func FileInfo(fi *db.FileInfo) *picturev1.FileInfo {
 	return &picturev1.FileInfo{
+		Id:   fi.ID,
 		Name: fi.Name,
 	}
 }
@@ -29,5 +30,16 @@ func FileInfo(fi *db.FileInfo) *picturev1.FileInfo {
 func CreateEventResponse(id uint) *picturev1.CreateEventResponse {
 	return &picturev1.CreateEventResponse{
 		Id: uint64(id),
+	}
+}
+
+func Thumbnail(ti *db.ThumbnailInfo) *picturev1.Thumbnail {
+	return &picturev1.Thumbnail{
+		Id:   ti.ID,
+		Name: ti.Name,
+		FileInfo: &picturev1.FileInfo{
+			Id:   ti.FileInfoID,
+			Name: ti.FileInfo.Name,
+		},
 	}
 }
