@@ -69,6 +69,53 @@ func (_c *MockDB_AddFileInfo_Call) RunAndReturn(run func(context.Context, *db.Fi
 	return _c
 }
 
+// AddThumbnailInfo provides a mock function with given fields: _a0, _a1
+func (_m *MockDB) AddThumbnailInfo(_a0 context.Context, _a1 *db.ThumbnailInfo) error {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddThumbnailInfo")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *db.ThumbnailInfo) error); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockDB_AddThumbnailInfo_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'AddThumbnailInfo'
+type MockDB_AddThumbnailInfo_Call struct {
+	*mock.Call
+}
+
+// AddThumbnailInfo is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 *db.ThumbnailInfo
+func (_e *MockDB_Expecter) AddThumbnailInfo(_a0 interface{}, _a1 interface{}) *MockDB_AddThumbnailInfo_Call {
+	return &MockDB_AddThumbnailInfo_Call{Call: _e.mock.On("AddThumbnailInfo", _a0, _a1)}
+}
+
+func (_c *MockDB_AddThumbnailInfo_Call) Run(run func(_a0 context.Context, _a1 *db.ThumbnailInfo)) *MockDB_AddThumbnailInfo_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*db.ThumbnailInfo))
+	})
+	return _c
+}
+
+func (_c *MockDB_AddThumbnailInfo_Call) Return(_a0 error) *MockDB_AddThumbnailInfo_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockDB_AddThumbnailInfo_Call) RunAndReturn(run func(context.Context, *db.ThumbnailInfo) error) *MockDB_AddThumbnailInfo_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // CreateEvent provides a mock function with given fields: _a0, _a1
 func (_m *MockDB) CreateEvent(_a0 context.Context, _a1 *db.Event) (uint, error) {
 	ret := _m.Called(_a0, _a1)
@@ -298,6 +345,67 @@ func (_c *MockDB_GetFileInfo_Call) Return(_a0 *db.FileInfo, _a1 error) *MockDB_G
 }
 
 func (_c *MockDB_GetFileInfo_Call) RunAndReturn(run func(context.Context, string) (*db.FileInfo, error)) *MockDB_GetFileInfo_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetThumbnails provides a mock function with given fields: ctx, eventId, limit, offset
+func (_m *MockDB) GetThumbnails(ctx context.Context, eventId uint, limit int, offset int) ([]*db.ThumbnailInfo, error) {
+	ret := _m.Called(ctx, eventId, limit, offset)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetThumbnails")
+	}
+
+	var r0 []*db.ThumbnailInfo
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint, int, int) ([]*db.ThumbnailInfo, error)); ok {
+		return rf(ctx, eventId, limit, offset)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint, int, int) []*db.ThumbnailInfo); ok {
+		r0 = rf(ctx, eventId, limit, offset)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*db.ThumbnailInfo)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint, int, int) error); ok {
+		r1 = rf(ctx, eventId, limit, offset)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockDB_GetThumbnails_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetThumbnails'
+type MockDB_GetThumbnails_Call struct {
+	*mock.Call
+}
+
+// GetThumbnails is a helper method to define mock.On call
+//   - ctx context.Context
+//   - eventId uint
+//   - limit int
+//   - offset int
+func (_e *MockDB_Expecter) GetThumbnails(ctx interface{}, eventId interface{}, limit interface{}, offset interface{}) *MockDB_GetThumbnails_Call {
+	return &MockDB_GetThumbnails_Call{Call: _e.mock.On("GetThumbnails", ctx, eventId, limit, offset)}
+}
+
+func (_c *MockDB_GetThumbnails_Call) Run(run func(ctx context.Context, eventId uint, limit int, offset int)) *MockDB_GetThumbnails_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint), args[2].(int), args[3].(int))
+	})
+	return _c
+}
+
+func (_c *MockDB_GetThumbnails_Call) Return(_a0 []*db.ThumbnailInfo, _a1 error) *MockDB_GetThumbnails_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockDB_GetThumbnails_Call) RunAndReturn(run func(context.Context, uint, int, int) ([]*db.ThumbnailInfo, error)) *MockDB_GetThumbnails_Call {
 	_c.Call.Return(run)
 	return _c
 }

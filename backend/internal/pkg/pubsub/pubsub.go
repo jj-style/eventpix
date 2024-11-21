@@ -1,6 +1,7 @@
 package pubsub
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -69,7 +70,14 @@ func NewSubscriber(cfg *config.PubSub) (message.Subscriber, func(), error) {
 	default:
 		return nil, func() {}, fmt.Errorf("unsupported pubsub mode: %s", cfg.Mode)
 	}
+}
 
+func NewMemorySubscriberFromPublisher(publisher message.Publisher) (message.Subscriber, error) {
+	goChanPubSub, ok := publisher.(*gochannel.GoChannel)
+	if !ok {
+		return nil, errors.New("not a GoChannel publisher")
+	}
+	return goChanPubSub, nil
 }
 
 // get common watermill nats config for publisher/subscriber

@@ -10,8 +10,8 @@ import (
 	"syscall"
 
 	"github.com/ThreeDotsLabs/watermill/message"
-	"github.com/ThreeDotsLabs/watermill/pubsub/gochannel"
 	"github.com/jj-style/eventpix/backend/internal/config"
+	"github.com/jj-style/eventpix/backend/internal/pkg/pubsub"
 	"github.com/jj-style/eventpix/backend/internal/service"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -41,7 +41,11 @@ func newServerApp(cfg *config.Config, logger *zap.Logger, srv *http.Server, publ
 	var err error
 
 	if cfg.PubSub.Mode == "memory" {
-		thumbnailer, cleanup, err = initializeMemThumbnailer(cfg, logger, publisher.(*gochannel.GoChannel))
+		subscriber, err2 := pubsub.NewMemorySubscriberFromPublisher(publisher)
+		if err2 != nil {
+			logger.Fatal("creating memory subscriber from publisher", zap.Error(err))
+		}
+		thumbnailer, cleanup, err = initializeMemThumbnailer(cfg, logger, subscriber)
 	} else if cfg.PubSub.InProcess {
 		thumbnailer, cleanup, err = initializeThumbnailer(cfg, logger)
 	}

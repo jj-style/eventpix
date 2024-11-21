@@ -73,8 +73,8 @@ func upload(evt uint64) {
 
 func main() {
 	// createEvent()
+	// upload(1)
 	// getEvents()
 	// getEvent(1)
 	getThumbnails(1)
-	// upload(1)
 }
