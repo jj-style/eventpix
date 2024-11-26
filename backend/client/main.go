@@ -24,7 +24,7 @@ func createEvent() *picturev1.CreateEventResponse {
 		Live: false,
 		Storage: &picturev1.CreateEventRequest_Filesystem{
 			Filesystem: &picturev1.Filesystem{
-				Directory: "/ramdisk",
+				Directory: "./scratch/dbstore",
 			},
 		},
 	})))
@@ -59,8 +59,21 @@ func getThumbnails(id uint) {
 
 func upload(evt uint64) {
 	requests := []*picturev1.UploadRequest{
-		{File: &picturev1.File{Name: "file1.png", Data: lo.Must(os.ReadFile("/home/jj/Pictures/wallpaper.png"))}, EventId: evt},
-		{File: &picturev1.File{Name: "file2.png", Data: lo.Must(os.ReadFile("/home/jj/Pictures/wallpaper.png"))}, EventId: evt},
+		// {File: &picturev1.File{Name: "file1.png", Data: lo.Must(os.ReadFile("/home/jj/Pictures/wallpaper.png"))}, EventId: evt},
+		// {File: &picturev1.File{Name: "file2.png", Data: lo.Must(os.ReadFile("/home/jj/Pictures/wallpaper.png"))}, EventId: evt},
+	}
+	entries, err := os.ReadDir("./scratch/out")
+	if err != nil {
+		log.Fatalf("getting files to upload: %v", err)
+	}
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		requests = append(requests, &picturev1.UploadRequest{
+			File:    &picturev1.File{Name: e.Name(), Data: lo.Must(os.ReadFile("./scratch/out/" + e.Name()))},
+			EventId: evt,
+		})
 	}
 	for _, req := range requests {
 		resp, err := client.Upload(ctx, connect.NewRequest(req))

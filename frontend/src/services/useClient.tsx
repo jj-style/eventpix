@@ -7,6 +7,7 @@ import { ServiceType } from "@bufbuild/protobuf";
 // This transport is going to be used throughout the app
 const transport = createConnectTransport({
   baseUrl: "http://localhost:8080",
+  useHttpGet: true,
 });
 
 /**

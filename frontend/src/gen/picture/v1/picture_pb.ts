@@ -704,3 +704,81 @@ export class Thumbnail extends Message<Thumbnail> {
   }
 }
 
+/**
+ * @generated from message picture.v1.GetThumbnailRequest
+ */
+export class GetThumbnailRequest extends Message<GetThumbnailRequest> {
+  /**
+   * ID of the thumbnail to get
+   *
+   * @generated from field: string id = 1;
+   */
+  id = "";
+
+  constructor(data?: PartialMessage<GetThumbnailRequest>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "picture.v1.GetThumbnailRequest";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "id", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetThumbnailRequest {
+    return new GetThumbnailRequest().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetThumbnailRequest {
+    return new GetThumbnailRequest().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetThumbnailRequest {
+    return new GetThumbnailRequest().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetThumbnailRequest | PlainMessage<GetThumbnailRequest> | undefined, b: GetThumbnailRequest | PlainMessage<GetThumbnailRequest> | undefined): boolean {
+    return proto3.util.equals(GetThumbnailRequest, a, b);
+  }
+}
+
+/**
+ * @generated from message picture.v1.GetThumbnailResponse
+ */
+export class GetThumbnailResponse extends Message<GetThumbnailResponse> {
+  /**
+   * Base64 string encoded data of the image
+   *
+   * @generated from field: string data = 1;
+   */
+  data = "";
+
+  constructor(data?: PartialMessage<GetThumbnailResponse>) {
+    super();
+    proto3.util.initPartial(data, this);
+  }
+
+  static readonly runtime: typeof proto3 = proto3;
+  static readonly typeName = "picture.v1.GetThumbnailResponse";
+  static readonly fields: FieldList = proto3.util.newFieldList(() => [
+    { no: 1, name: "data", kind: "scalar", T: 9 /* ScalarType.STRING */ },
+  ]);
+
+  static fromBinary(bytes: Uint8Array, options?: Partial<BinaryReadOptions>): GetThumbnailResponse {
+    return new GetThumbnailResponse().fromBinary(bytes, options);
+  }
+
+  static fromJson(jsonValue: JsonValue, options?: Partial<JsonReadOptions>): GetThumbnailResponse {
+    return new GetThumbnailResponse().fromJson(jsonValue, options);
+  }
+
+  static fromJsonString(jsonString: string, options?: Partial<JsonReadOptions>): GetThumbnailResponse {
+    return new GetThumbnailResponse().fromJsonString(jsonString, options);
+  }
+
+  static equals(a: GetThumbnailResponse | PlainMessage<GetThumbnailResponse> | undefined, b: GetThumbnailResponse | PlainMessage<GetThumbnailResponse> | undefined): boolean {
+    return proto3.util.equals(GetThumbnailResponse, a, b);
+  }
+}
+

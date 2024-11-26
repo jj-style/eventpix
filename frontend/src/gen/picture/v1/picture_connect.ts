@@ -3,8 +3,8 @@
 /* eslint-disable */
 // @ts-nocheck
 
-import { CreateEventRequest, CreateEventResponse, GetEventRequest, GetEventResponse, GetEventsRequest, GetEventsResponse, GetThumbnailsRequest, GetThumbnailsResponse, UploadRequest, UploadResponse } from "./picture_pb.ts";
-import { MethodKind } from "@bufbuild/protobuf";
+import { CreateEventRequest, CreateEventResponse, GetEventRequest, GetEventResponse, GetEventsRequest, GetEventsResponse, GetThumbnailRequest, GetThumbnailResponse, GetThumbnailsRequest, GetThumbnailsResponse, UploadRequest, UploadResponse } from "./picture_pb.ts";
+import { MethodIdempotency, MethodKind } from "@bufbuild/protobuf";
 
 /**
  * @generated from service picture.v1.PictureService
@@ -56,6 +56,16 @@ export const PictureService = {
       I: GetThumbnailsRequest,
       O: GetThumbnailsResponse,
       kind: MethodKind.Unary,
+    },
+    /**
+     * @generated from rpc picture.v1.PictureService.GetThumbnail
+     */
+    getThumbnail: {
+      name: "GetThumbnail",
+      I: GetThumbnailRequest,
+      O: GetThumbnailResponse,
+      kind: MethodKind.Unary,
+      idempotency: MethodIdempotency.NoSideEffects,
     },
   }
 } as const;

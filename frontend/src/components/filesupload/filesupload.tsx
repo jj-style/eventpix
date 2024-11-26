@@ -2,38 +2,60 @@ import { useEffect, useRef, useState } from "react";
 import { useClient } from "../../services/useClient";
 import { PictureService } from "../../gen/picture/v1/picture_connect";
 import {
+  GetThumbnailsRequest,
+  GetThumbnailsResponse,
+  Thumbnail,
   UploadRequest,
-  ListRequest,
-  ListResponse,
+
 } from "../../gen/picture/v1/picture_pb";
-import { File as Filepb } from "../../gen/picture/v1/picture_pb";
 import { Fab } from "react-tiny-fab";
 import "react-tiny-fab/dist/styles.css";
 import { Button, Container, Navbar, Spinner } from "react-bootstrap";
 import Form from "react-bootstrap/Form";
 import { Result } from "../../types/result";
 import { Check, X } from "react-bootstrap-icons";
-import { Message } from "@bufbuild/protobuf";
+import InfiniteScroll from "react-infinite-scroll-component";
+import ThumbnailImage from "../thumbnail/thumbnail";
+
 
 const FilesUpload: React.FC = () => {
+  // file upload state
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
   const [previousUpload, setPreviousUpload] = useState<Result<boolean> | null>(
     null
   );
-  const [fileInfos, setFileInfos] = useState<Array<Filepb>>([]);
-  const [refresh, setRefresh] = useState(0);
+  const [thumbnails, setThumbnails] = useState<Array<Thumbnail>>([]);
   const inputFile = useRef<HTMLInputElement | null>(null);
+
+  // scrolling state
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [offset, setOffset] = useState<bigint>(BigInt(0));
+  const limit = BigInt(30);
+
   const client = useClient(PictureService);
 
+  const fetchData = () => {
+    console.log("fetching");
+    client.getThumbnails(new GetThumbnailsRequest({eventId: BigInt(1), offset: offset, limit: limit }))
+    .then((response) => {
+      const res = response as GetThumbnailsResponse;
+      setThumbnails(curr => curr.concat(res.thumbnails));
+      setHasMore(res.thumbnails.length === Number(limit));
+      setOffset(curr => curr+BigInt(res.thumbnails.length));
+    });
+  }
+  
+  const refresh = () => {
+    console.log("refreshing");
+    fetchData();
+  }
+  
   useEffect(() => {
-    async function listGallery(){
-      const res = await client.listGallery(new ListRequest({}));
-      console.log(res);
-      setFileInfos((res as ListResponse).files);
-    }
-    listGallery();
-  }, [refresh, client]);
+    console.log("initial load");
+    fetchData();
+  }, [])
+
 
   const selectFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFiles(event.target.files);
@@ -71,7 +93,6 @@ const FilesUpload: React.FC = () => {
         })
         .finally(() => {
           setUploading(false);
-          setRefresh((prev) => prev + 1);
         });
     }
   };
@@ -135,17 +156,30 @@ const FilesUpload: React.FC = () => {
         mainButtonStyles={{ backgroundColor: "red" }}
         icon="+️"
       ></Fab>
-      <div className="card">
-        <div className="card-header">List of Files</div>
-        <ul className="list-group list-group-flush">
-          {fileInfos &&
-            fileInfos.map((file, index) => (
-              <li className="list-group-item" key={index}>
-                <span>{file.name}</span>
-              </li>
-            ))}
-        </ul>
-      </div>
+      <InfiniteScroll
+        className="d-flex flex-wrap"
+        dataLength={thumbnails.length} //This is important field to render the next data
+        next={fetchData}
+        hasMore={hasMore}
+        loader={<h4>Loading...</h4>}
+        endMessage={
+          <p style={{ textAlign: "center" }}>
+            <b>Yay! You have seen it all</b>
+          </p>
+        }
+        // below props only if you need pull down functionality
+        refreshFunction={refresh}
+        pullDownToRefresh
+        pullDownToRefreshThreshold={50}
+        pullDownToRefreshContent={
+          <h3 style={{ textAlign: "center" }}>&#8595; Pull down to refresh</h3>
+        }
+        releaseToRefreshContent={
+          <h3 style={{ textAlign: "center" }}>&#8593; Release to refresh</h3>
+        }
+      >
+        {thumbnails.map((item, idx) => <ThumbnailImage key={idx} thumbnail={item} />)}
+      </InfiniteScroll>
     </Container>
   );
 };

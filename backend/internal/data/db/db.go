@@ -24,6 +24,7 @@ type DB interface {
 	GetFileInfo(context.Context, string) (*FileInfo, error)
 	AddThumbnailInfo(context.Context, *ThumbnailInfo) error
 	GetThumbnails(ctx context.Context, eventId uint, limit int, offset int) ([]*ThumbnailInfo, error)
+	GetThumbnailInfo(context.Context, string) (*ThumbnailInfo, error)
 }
 
 type dbImpl struct {
@@ -155,4 +156,19 @@ func (d *dbImpl) GetThumbnails(ctx context.Context, eventId uint, limit int, off
 		return nil, result.Error
 	}
 	return lo.Map(thumbnails, func(e ThumbnailInfo, _ int) *ThumbnailInfo { return &e }), nil
+}
+
+func (d *dbImpl) GetThumbnailInfo(ctx context.Context, id string) (*ThumbnailInfo, error) {
+	var ti ThumbnailInfo
+	result := d.db.WithContext(ctx).First(&ti, "id = ?", id)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			d.log.Errorf("thumbnail(%s) not found in db", id)
+			return nil, result.Error
+		} else {
+			d.log.Errorf("getting thumbnail(%s) from db: %v", id, result.Error)
+			return nil, result.Error
+		}
+	}
+	return &ti, nil
 }

@@ -3,7 +3,7 @@ server:
   environment: development
 database:
   driver: sqlite
-  uri: test.db
+  uri: ./scratch/test.db
   # uri: file::memory:?cache=shared
 pubsub:
   mode: memory
@@ -11,4 +11,4 @@ pubsub:
   inProcess: false
   nats:
     url: "127.0.0.1:4222"
-  workers: 2
+  workers: 5
