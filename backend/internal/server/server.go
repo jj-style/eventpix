@@ -11,20 +11,52 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jj-style/eventpix/backend/gen/picture/v1/picturev1connect"
 	"github.com/jj-style/eventpix/backend/internal/config"
+	"github.com/jj-style/eventpix/backend/internal/service"
 	"github.com/rs/cors"
 	"go.uber.org/zap"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
 
-func NewServer(cfg *config.Config, srv picturev1connect.PictureServiceHandler, logger *zap.Logger) *http.Server {
+func NewServer(
+	cfg *config.Config,
+	pictureService picturev1connect.PictureServiceHandler,
+	storageService *service.StorageService,
+	logger *zap.Logger,
+) *http.Server {
+
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.Compress(5, "image/jpeg", "image/png"))
 	r.Mount("/debug", middleware.Profiler())
 
+	// TODO: custom endpoint to get thumbnail/image image
+	r.Route("/storage", func(r chi.Router) {
+		r.Get("/thumbnail/{id}", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+			got, err := storageService.GetThumbnail(r.Context(), id)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Write(got)
+			w.Header().Add("Cache-Control", "max-age=3600") // proxies to cache for 1 hour
+		})
+		r.Get("/picture/{id}", func(w http.ResponseWriter, r *http.Request) {
+			id := chi.URLParam(r, "id")
+			got, err := storageService.GetPicture(r.Context(), id)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Write(got)
+			w.Header().Add("Cache-Control", "max-age=3600") // proxies to cache for 1 hour
+		})
+	})
+
 	compress1KB := connect.WithCompressMinBytes(1024)
-	path, handler := picturev1connect.NewPictureServiceHandler(srv, compress1KB)
+	path, handler := picturev1connect.NewPictureServiceHandler(pictureService, compress1KB)
 	r.Mount(path, handler)
 	r.Mount(grpchealth.NewHandler(
 		grpchealth.NewStaticChecker(picturev1connect.PictureServiceName),

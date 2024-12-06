@@ -24,6 +24,7 @@ type FileInfo struct {
 	gorm.Model
 	ID      string
 	EventID uint
+	Event   Event
 	Name    string
 }
 
@@ -32,6 +33,7 @@ type ThumbnailInfo struct {
 	ID         string
 	Name       string
 	EventID    uint
+	Event      Event
 	FileInfoID string
 	FileInfo   FileInfo
 }

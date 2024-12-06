@@ -18,7 +18,7 @@ import (
 )
 
 func initializeServer(cfg *config.Config, logger *zap.Logger) (*serverApp, func(), error) {
-	panic(wire.Build(config.Provider, pubsub.NewPublisher, db.NewDb, service.NewPictureServiceServer, server.NewServer, newServerApp))
+	panic(wire.Build(config.Provider, pubsub.NewPublisher, db.NewDb, service.NewPictureServiceServer, service.NewStorageService, server.NewServer, newServerApp))
 }
 
 func initializeThumbnailer(cfg *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {

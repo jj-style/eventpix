@@ -32,7 +32,8 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func
 		return nil, nil, err
 	}
 	pictureServiceHandler := service.NewPictureServiceServer(logger, dbDB, publisher)
-	httpServer := server.NewServer(cfg2, pictureServiceHandler, logger)
+	storageService := service.NewStorageService(dbDB, logger)
+	httpServer := server.NewServer(cfg2, pictureServiceHandler, storageService, logger)
 	cmdServerApp, cleanup3, err := newServerApp(cfg2, logger, httpServer, publisher)
 	if err != nil {
 		cleanup2()

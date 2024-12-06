@@ -3,10 +3,8 @@ package service
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"io"
 
 	"connectrpc.com/connect"
 	"github.com/ThreeDotsLabs/watermill"
@@ -140,33 +138,4 @@ func (p *pictureServiceServer) GetThumbnails(ctx context.Context, req *connect.R
 		Thumbnails: lo.Map(thumbnails, func(item *db.ThumbnailInfo, _ int) *picturev1.Thumbnail { return prodto.Thumbnail(item) }),
 	}
 	return connect.NewResponse(resp), nil
-}
-
-func (p *pictureServiceServer) GetThumbnail(ctx context.Context, req *connect.Request[picturev1.GetThumbnailRequest]) (*connect.Response[picturev1.GetThumbnailResponse], error) {
-	// get thumbnail details from db
-	ti, err := p.db.GetThumbnailInfo(ctx, req.Msg.GetId())
-	if err != nil {
-		p.log.Errorf("getting thumbnail info for %s: %v", req.Msg.GetId(), err)
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-
-	// get storage from thumbanils event
-	evt, err := p.db.GetEvent(ctx, uint64(ti.EventID))
-	if err != nil {
-		p.log.Errorf("getting event for thumbnail: %s: %v", req.Msg.GetId(), err)
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-
-	data, err := evt.Storage.Get(ctx, ti.Name)
-	if err != nil {
-		p.log.Errorf("getting thumbnail data for %s: %v", req.Msg.GetId(), err)
-		return nil, connect.NewError(connect.CodeInternal, err)
-	}
-	defer data.Close()
-
-	buf, _ := io.ReadAll(data)
-	str := base64.StdEncoding.EncodeToString(buf)
-	response := connect.NewResponse(&picturev1.GetThumbnailResponse{Data: str})
-	response.Header().Set("Cache-Control", "max-age=3600") // proxies to cache for 1 hour
-	return response, nil
 }

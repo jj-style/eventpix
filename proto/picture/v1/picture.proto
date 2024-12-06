@@ -10,9 +10,6 @@ service PictureService {
     rpc GetEvent(GetEventRequest) returns (GetEventResponse);
     rpc Upload(UploadRequest) returns (UploadResponse);
     rpc GetThumbnails(GetThumbnailsRequest) returns (GetThumbnailsResponse);
-    rpc GetThumbnail(GetThumbnailRequest) returns (GetThumbnailResponse) {
-        option idempotency_level = NO_SIDE_EFFECTS;
-    };
 }
 
 // Message representing an event
@@ -118,14 +115,4 @@ message Thumbnail {
     string name = 2;
     // File information the thumbnail is for.
     FileInfo file_info = 3;
-}
-
-message GetThumbnailRequest {
-    // ID of the thumbnail to get
-    string id = 1;
-}
-
-message GetThumbnailResponse {
-    // Base64 string encoded data of the image
-    string data = 1;
 }

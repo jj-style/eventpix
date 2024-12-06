@@ -6,7 +6,6 @@ import {
   GetThumbnailsResponse,
   Thumbnail,
   UploadRequest,
-
 } from "../../gen/picture/v1/picture_pb";
 import { Fab } from "react-tiny-fab";
 import "react-tiny-fab/dist/styles.css";
@@ -16,7 +15,7 @@ import { Result } from "../../types/result";
 import { Check, X } from "react-bootstrap-icons";
 import InfiniteScroll from "react-infinite-scroll-component";
 import ThumbnailImage from "../thumbnail/thumbnail";
-
+import useInViewPort from "../../hooks/useInViewPort";
 
 const FilesUpload: React.FC = () => {
   // file upload state
@@ -31,31 +30,39 @@ const FilesUpload: React.FC = () => {
   // scrolling state
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [offset, setOffset] = useState<bigint>(BigInt(0));
-  const limit = BigInt(30);
+  const limit = BigInt(10);
+  const lastVisibleRef = useRef<HTMLDivElement>(null);
+  const lastVisible = useInViewPort(lastVisibleRef, {threshold: 0.5});
 
   const client = useClient(PictureService);
 
   const fetchData = () => {
     console.log("fetching");
-    client.getThumbnails(new GetThumbnailsRequest({eventId: BigInt(1), offset: offset, limit: limit }))
-    .then((response) => {
-      const res = response as GetThumbnailsResponse;
-      setThumbnails(curr => curr.concat(res.thumbnails));
-      setHasMore(res.thumbnails.length === Number(limit));
-      setOffset(curr => curr+BigInt(res.thumbnails.length));
-    });
-  }
-  
+    client
+      .getThumbnails(
+        new GetThumbnailsRequest({
+          eventId: BigInt(1),
+          offset: offset,
+          limit: limit,
+        })
+      )
+      .then((response) => {
+        const res = response as GetThumbnailsResponse;
+        setThumbnails((curr) => curr.concat(res.thumbnails));
+        setHasMore(res.thumbnails.length === Number(limit));
+        setOffset((curr) => curr + BigInt(res.thumbnails.length));
+      });
+  };
+
   const refresh = () => {
     console.log("refreshing");
     fetchData();
-  }
-  
+  };
+
   useEffect(() => {
     console.log("initial load");
     fetchData();
-  }, [])
-
+  }, []);
 
   const selectFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSelectedFiles(event.target.files);
@@ -156,6 +163,7 @@ const FilesUpload: React.FC = () => {
         mainButtonStyles={{ backgroundColor: "red" }}
         icon="+️"
       ></Fab>
+      <div style={{height:"50%", overflow :"auto"}}>
       <InfiniteScroll
         className="d-flex flex-wrap"
         dataLength={thumbnails.length} //This is important field to render the next data
@@ -178,8 +186,16 @@ const FilesUpload: React.FC = () => {
           <h3 style={{ textAlign: "center" }}>&#8593; Release to refresh</h3>
         }
       >
-        {thumbnails.map((item, idx) => <ThumbnailImage key={idx} thumbnail={item} />)}
+        {thumbnails.map((item, idx) => (
+          <div 
+          key={idx} 
+          ref={idx===thumbnails.length-1 ? lastVisibleRef : undefined}
+          >
+            <ThumbnailImage key={idx} thumbnail={item} />
+          </div>
+        ))}
       </InfiniteScroll>
+      </div>
     </Container>
   );
 };

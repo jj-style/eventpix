@@ -121,7 +121,10 @@ func (d *dbImpl) AddFileInfo(ctx context.Context, fi *FileInfo) error {
 
 func (d *dbImpl) GetFileInfo(ctx context.Context, id string) (*FileInfo, error) {
 	var fi FileInfo
-	result := d.db.WithContext(ctx).First(&fi, "id = ?", id)
+	result := d.db.
+		WithContext(ctx).
+		Preload(clause.Associations).
+		First(&fi, "id = ?", id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			d.log.Errorf("file(%s) not found in db", id)
@@ -160,7 +163,10 @@ func (d *dbImpl) GetThumbnails(ctx context.Context, eventId uint, limit int, off
 
 func (d *dbImpl) GetThumbnailInfo(ctx context.Context, id string) (*ThumbnailInfo, error) {
 	var ti ThumbnailInfo
-	result := d.db.WithContext(ctx).First(&ti, "id = ?", id)
+	result := d.db.
+		WithContext(ctx).
+		Preload(clause.Associations).
+		First(&ti, "id = ?", id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			d.log.Errorf("thumbnail(%s) not found in db", id)
