@@ -1,0 +1,26 @@
+<h3>S3 Storage Configuration</h3>
+<div class="row">
+  <div class="form-group col-md-6">
+    <label for="accessKey" class="form-label">Access Key</label>
+    <input type="text" class="form-control" name="s3[accessKey]" placeholder="Access Key" aria-label="Access Key" required>
+  </div>
+  <div class="form-group col-md-6">
+    <label for="secretKey" class="form-label">Secret Key</label>
+    <input type="password" class="form-control" name="s3[secretKey]" placeholder="Secret Key" aria-label="Secret Key" required>
+  </div>
+</div>
+<div class="row">
+  <div class="form-group col-6">
+    <label for="bucket" class="form-label">Bucket</label>
+    <input type="text" class="form-control" name="s3[bucket]" placeholder="Bucket" aria-label="Bucket" required>
+  </div>
+  <div class="form-group col-6">
+    <label for="region" class="form-label">Region</label>
+    <input type="text" class="form-control" name="s3[region]" placeholder="us-east-1" aria-label="Region" required>
+  </div>
+</div>
+<div class="form-group">
+    <label for="endpoint" class="form-label">Endpoint</label>
+    <input type="url" class="form-control" name="s3[endpoint]" placeholder="my.s3.com:9000" aria-label="Endpoint">
+    <small id="endpointHelp" class="form-text text-muted">Optionally set custom s3 endpoint. Defaults to AWS otherwise.</small>
+</div>

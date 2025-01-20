@@ -1,0 +1,36 @@
+/* default */
+.card-columns {
+    column-count: 2;
+    column-gap: 0;
+}
+
+/* small */
+@media (min-width: 576px) {
+    .card-columns {
+        column-count: 3;
+    }
+}
+/* large */
+@media (min-width: 992px) {
+    .card-columns {
+        column-count: 4;
+    }
+}
+
+/* xl */
+@media (min-width: 1400px) {
+    .card-columns {
+        column-count: 5;
+    }
+}
+
+.lb-image, .lb-dataContainer {
+ max-width: 100%;
+ height: auto !important;
+ width: 100%;
+}
+
+.lb-outerContainer {
+ max-width: 100%;
+ height: auto !important;
+}

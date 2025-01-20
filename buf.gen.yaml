@@ -3,20 +3,24 @@ managed:
   enabled: true
   override:
     - file_option: go_package_prefix
-      value: github.com/jj-style/eventpix/backend/gen
+      value: github.com/jj-style/eventpix/internal/gen
+  disable:
+    # Disables all go_package changes for this module only
+    - file_option: go_package
+      module: buf.build/googleapis/googleapis
 plugins:
   - remote: buf.build/protocolbuffers/go
-    out: backend/gen
+    out: internal/gen
     opt: paths=source_relative
-  - remote: buf.build/connectrpc/go
-    out: backend/gen
-    opt: paths=source_relative
-  - remote: buf.build/connectrpc/es:v1.6.1
-    out: frontend/src/gen
-    opt: target=ts
-  - remote: buf.build/bufbuild/es:v1.10.0
-    out: frontend/src/gen
-    # Add more plugin options here
-    opt: target=ts
+  # - remote: buf.build/connectrpc/go
+  #   out: backend/gen
+  #   opt: paths=source_relative
+  # - remote: buf.build/connectrpc/es:v1.6.1
+  #   out: frontend/src/gen
+  #   opt: target=ts
+  # - remote: buf.build/bufbuild/es:v1.10.0
+  #   out: frontend/src/gen
+  #   # Add more plugin options here
+  #   opt: target=ts
 inputs:
   - directory: proto

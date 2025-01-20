@@ -2,10 +2,18 @@ syntax = "proto3";
 
 package events.v1;
 
-// Message emitted when a new photo is created
-message NewPhoto {
+// Message emitted when a new media is uploaded and stored
+message NewMedia {
+  enum MediaType {
+    UNSPECIFIED = 0;
+    IMAGE = 1;
+    VIDEO = 2;
+  }
+  
   // Identifier of the event the photo was created in
   uint64 event_id = 1;
-  // ID of the photo
+  // ID of the file
   string file_id = 2;
+  // Type of the file
+  MediaType type = 3;
 }

@@ -1,0 +1,118 @@
+{{define "head"}}
+<link rel="stylesheet" href="/static/stylesheets/cards.css">
+<!-- for FAB button -->
+<link rel='stylesheet' href='https://fonts.googleapis.com/icon?family=Material+Icons'>
+{{ if .event.Live }}
+<link rel="stylesheet" href="/static/stylesheets/fab.css">
+{{ end }}
+<!-- clicking/scrolling through images -->
+<link type="text/css" rel="stylesheet" href="https://unpkg.com/lightgallery@2.8.2/css/lightgallery-bundle.min.css" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Delius+Swash+Caps&display=swap" rel="stylesheet">
+<style>
+    .delius-swash-caps-regular {
+        font-family: "Delius Swash Caps", serif;
+        font-weight: 400;
+        font-style: normal;
+    }
+    body {
+        background-color: azure;
+    }
+</style>
+{{end}}
+
+{{ define "content" }}
+<div class="container mt-3">
+    {{ if .event.Live }}
+    <!-- modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">Upload Pictures</h5>
+            </div>
+            <div class="modal-body" hx-ext="response-targets">
+                <div class="mb-3">
+                    <form id='uploadForm' hx-encoding='multipart/form-data' hx-post='/upload' hx-target="#uploadFormResult" hx-target-error="#uploadFormError">
+                        <input type="hidden" id="event.Id" name="eventId" value="{{.event.Id}}">
+                        <div class="form-group mb-2">
+                            <label for="files" class="form-label">Select files</label>
+                            <input class="form-control" type="file" name="files" id="files" multiple>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                    </form>
+                </div>
+                <div id="uploadFormResult"></div>
+                <div style="color: red;" id="uploadFormError"></div>
+            </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
+    <div class="row text-center">
+        <h1 class="delius-swash-caps-regular">{{.event.Name}}</h1>
+        <i class="bi bi-camera" style="font-size: 2rem;"></i>
+    </div>
+    <!-- image grid -->
+    <div class="card-columns" 
+        id="lightgallery"
+        hx-ext="sse"
+        sse-connect="/sse"
+        sse-swap="new-thumbnail:{{.event.Id}}"
+        hx-swap="afterbegin" 
+    >
+        <!-- initial load -->
+        <span hx-get="/thumbnails/{{.event.Id}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-indicator="#spinner"></span>
+    </div>
+    
+    <!-- loading spinner when fetching next page of images -->
+    <div class="row d-flex justify-content-center mt-3">
+        <div id="spinner" class="spinner-grow bs-indicator" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    {{ if .event.Live }}
+    <!-- FAB for opening file upload modal -->
+    <div class="fab-container">
+        <div role="button" class="iconbutton" data-bs-toggle="modal" data-bs-target="#uploadModal">
+            <i class="bi bi-upload"></i>
+        </div>
+    </div>
+    {{ end }}
+
+</div>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://unpkg.com/lightgallery@2.8.2/lightgallery.min.js"></script>
+<script src="https://unpkg.com/lightgallery@2.8.2/plugins/thumbnail/lg-thumbnail.min.js"></script>
+<script src="https://unpkg.com/lightgallery@2.8.2/plugins/zoom/lg-zoom.min.js"></script>
+<script src="https://unpkg.com/lightgallery@2.8.2/plugins/video/lg-video.min.js"></script>
+<script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
+<script>
+    window.addEventListener("load", function () {
+        document.body.addEventListener("uploadComplete", function () {
+            $('#uploadForm')[0].reset();
+            $('#uploadModal').modal('hide');
+        });
+        let gallery = document.getElementById('lightgallery');
+        let lgallery = lightGallery(gallery, {
+            plugins: [lgZoom, lgThumbnail, lgVideo],
+            speed: 500,
+            selector: '.lg-item',
+            mobileSettings: {download: true, showCloseIcon: true, controls: true}
+            // ... other settings
+        });
+        document.body.addEventListener("refreshGallery", function() {
+            lgallery.refresh();
+        })
+        document.body.addEventListener('htmx:sseMessage', function (e) {
+            lgallery.refresh();
+        })
+    });
+</script>
+{{ end }}

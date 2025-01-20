@@ -1,0 +1,23 @@
+<tr hx-target="this" hx-swap="outerHTML">
+<td><a href="/event/{{.Id}}">{{.Name}}</a></td>
+<td>
+    {{ $checked := "" }}{{ if .Live }}{{ $checked = "checked" }}{{ end }}
+    <input
+        hx-ext="json-enc"
+        hx-post="/event/{{.Id}}/live"
+        hx-vals='{
+        "live": {{ not .Live }}
+        }'
+        type="checkbox"
+        {{$checked}}>
+</td>
+<td>
+    <button
+        class="btn btn-outline-danger"
+        hx-confirm="Are you sure you want to delete the event {{.Name }}. Your pictures will not be deleted."
+        hx-delete="/event/{{.Id}}"
+    >
+    <i class="bi bi-trash"></i>
+    </button>
+</td>
+</tr>

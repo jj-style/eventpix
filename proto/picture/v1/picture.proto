@@ -3,11 +3,15 @@ syntax = "proto3";
 package picture.v1;
 
 import "picture/v1/storage.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
 
 service PictureService {
     rpc CreateEvent(CreateEventRequest) returns (CreateEventResponse);
+    rpc SetEventLive(SetEventLiveRequest) returns (SetEventLiveResponse);
     rpc GetEvents(GetEventsRequest) returns (GetEventsResponse);
     rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+    rpc DeleteEvent(DeleteEventRequest) returns (google.protobuf.Empty);
     rpc Upload(UploadRequest) returns (UploadResponse);
     rpc GetThumbnails(GetThumbnailsRequest) returns (GetThumbnailsResponse);
 }
@@ -25,6 +29,7 @@ message Event {
     // Storage for the event
     oneof storage {
         Filesystem filesystem = 5;
+        S3 s3 = 6;
     }
 }
 
@@ -39,6 +44,10 @@ message FileInfo {
     string id = 1;
     // Name of the file
     string name = 2;
+    // Whether the file is a video or not
+    bool video = 3;
+    // ID of the event the file belongs to
+    uint64 event_id = 4;
 }
 
 // Create an event where photos will be taken and associated with
@@ -50,6 +59,7 @@ message CreateEventRequest {
     // Storage for the event
     oneof storage {
         Filesystem filesystem = 3;
+        S3 s3 = 4;
     }
 }
 
@@ -75,6 +85,20 @@ message GetEventRequest{
 
 message GetEventResponse{
     Event event = 1;
+}
+
+message SetEventLiveRequest {
+    uint64 id = 1;
+    bool live = 2;
+}
+
+message SetEventLiveResponse {
+    // The updated event
+    Event event = 1;
+}
+
+message DeleteEventRequest {
+    uint64 id = 1;
 }
 
 // Message to upload a file to an event
@@ -115,4 +139,6 @@ message Thumbnail {
     string name = 2;
     // File information the thumbnail is for.
     FileInfo file_info = 3;
+    // ID of the event the thumbnail belongs to
+    uint64 event_id = 4;
 }

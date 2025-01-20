@@ -5,3 +5,11 @@ package picture.v1;
 message Filesystem {
     string directory = 1;
 }
+
+message S3 {
+    string bucket     = 1;
+    string access_key = 2;
+    string secret_key = 3;
+    string region     = 4;
+    string endpoint   = 5;
+}

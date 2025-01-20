@@ -1,0 +1,14 @@
+server:
+  address: 0.0.0.0:8080
+  environment: development
+  serverUrl: http://localhost:8080
+  secretKey: CHANGEME
+database:
+  driver: sqlite
+  uri: ./scratch/test.db
+  # uri: file::memory:?cache=shared
+nats:
+  inProcess: true
+  url: "127.0.0.1:4222"
+imagor:
+  url: http://localhost:8000

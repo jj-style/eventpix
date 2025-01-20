@@ -1,0 +1,23 @@
+/* adapted from https://plainenglish.io/blog/how-to-create-a-floating-action-button-with-pure-css-positioning-e52ba498083f */
+
+.fab-container {
+  position: fixed;
+  bottom: 50px;
+  right: 50px;
+  cursor: pointer;
+}
+
+.iconbutton i {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: white;
+}
+
+.iconbutton{
+width:50px;
+height:50px;
+border-radius: 100%;
+background: #FF4F79;
+}

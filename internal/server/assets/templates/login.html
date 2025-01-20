@@ -1,0 +1,32 @@
+{{ define "head" }}{{ end }} {{ define "content" }}
+<div class="container">
+  <h1>Login</h1>
+  <span>New user? <a href="/register">Register</a>.</span>
+  <form hx-post="/auth/login" hx-ext='json-enc'>
+    <div class="form-group">
+      <label for="inputUsername">Username</label>
+      <input
+        type="text"
+        class="form-control"
+        id="inputUsername"
+        placeholder="Enter username"
+        name="username"
+      />
+    </div>
+    <div class="form-group">
+      <label for="inputPassword">Password</label>
+      <input
+        type="password"
+        class="form-control"
+        id="inputPassword"
+        placeholder="Password"
+        name="password"
+      />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+</div>
+{{ end }}
+{{ define "scripts" }}
+<script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/json-enc.js"></script>
+{{ end }}

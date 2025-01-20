@@ -1,0 +1,33 @@
+{{ define "head" }} {{ end }} {{ define "content" }}
+<div class="container">
+  <h1>Events</h1>
+  <div class="d-flex flex-row justify-content-between">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item active" aria-current="page">Events</li>
+      </ol>
+    </nav>
+    <span>User {{.user.Username}}</span>
+  </div>
+  <a href="/event/new" class="btn btn-primary" role="button">New Event</a>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Live</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {{ range .events }}
+      {{template "eventRow.html" .}}
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ end }}
+
+{{ define "scripts" }}
+<script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/json-enc.js"></script>
+{{ end }}

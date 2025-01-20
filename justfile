@@ -1,8 +1,23 @@
-# show just recipes
-_help:
+__git_version := `git rev-parse --short HEAD`
+__module := 'github.com/jj-style/eventpix'
+__cmd_module := __module / 'backend' / 'cmd'
+
+[private]
+help:
     just --list --unsorted
 
-# generate protos
-proto:
-    @buf generate
-    @/bin/find frontend/src/gen/ -name "*.ts" -exec sed -i 's/_pb\.js/_pb.ts/g' {} \;
+# generate code
+generate:
+    go generate ./...
+
+build version=__git_version:
+    @mkdir -p bin
+    go build -ldflags="-X '{{__cmd_module}}.Version={{version}}'" -o bin/eventpix main.go 
+
+test *flags:
+    go test -cover {{flags}} $(go list ./... | grep -v mocks)
+
+test-full: (test "-shuffle on -race")
+
+run:
+    watchexec -e go -e html -e js -e css -r go run main.go server

@@ -1,0 +1,19 @@
+filename: "mock_{{.InterfaceName}}.go"
+dir: "{{.InterfaceDir}}/mocks"
+mockname: "Mock{{.InterfaceName}}"
+outpkg: "{{.PackageName}}"
+with-expecter: True
+packages:
+  github.com/jj-style/eventpix/internal/service:
+    interfaces:
+      EventpixService:
+      StorageService:
+  github.com/jj-style/eventpix/internal/pkg/imagor:
+    interfaces:
+      Imagor:
+  github.com/jj-style/eventpix/internal/data/db:
+    interfaces:
+      DB:
+  github.com/jj-style/eventpix/internal/data/storage:
+    interfaces:
+      Storage:
