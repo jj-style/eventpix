@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/adrg/xdg"
 	"github.com/jj-style/eventpix/internal/config"
@@ -55,6 +56,19 @@ func initConfig() {
 		viper.AddConfigPath(".") // optionally look for config in the working directory
 	}
 	viper.SetDefault("nats.url", nats.DefaultURL)
+
+	viper.SetEnvPrefix("eventpix")
+	viper.EnvKeyReplacer(strings.NewReplacer(`.`, `_`))
+	viper.AutomaticEnv()
+	// https://github.com/spf13/viper/issues/761#issuecomment-1578931559
+	for _, e := range os.Environ() {
+		split := strings.Split(e, "=")
+		k := split[0]
+
+		if strings.HasPrefix(k, strings.ToUpper(viper.GetEnvPrefix())) {
+			viper.BindEnv(strings.Join(strings.Split(k, "_")[1:], "."), k)
+		}
+	}
 
 	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("Can't read config:", err)

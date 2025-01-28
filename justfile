@@ -1,3 +1,5 @@
+set dotenv-load
+
 __git_version := `git rev-parse --short HEAD`
 __module := 'github.com/jj-style/eventpix'
 __cmd_module := __module / 'backend' / 'cmd'

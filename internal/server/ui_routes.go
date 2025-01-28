@@ -4,13 +4,17 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/YamiOdymel/multitemplate"
 	"github.com/donseba/go-htmx"
@@ -20,6 +24,7 @@ import (
 	picturev1 "github.com/jj-style/eventpix/internal/gen/picture/v1"
 	"github.com/jj-style/eventpix/internal/server/middleware"
 	"github.com/jj-style/eventpix/internal/server/sse"
+	templatedata "github.com/jj-style/eventpix/internal/server/template_data"
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
 	"github.com/samber/lo"
@@ -36,17 +41,22 @@ func createRenderer() multitemplate.Renderer {
 		"isLast": func(index, len int) bool {
 			return index+1 == len
 		},
+		"upper": strings.ToUpper,
 	}
-	r.AddFromFS("eventGallery", content, "assets/templates/base.html", "assets/templates/eventGallery.html")
+	base := "assets/templates/base.html"
+
+	r.AddFromFSFuncs("index", fm, content, base, "assets/templates/index.html")
+	r.AddFromFS("eventGallery", content, base, "assets/templates/eventGallery.html")
 	r.AddFromFSFuncs("thumbnails", fm, content, "assets/templates/thumbnails.html")
 
-	r.AddFromFS("listEvents", content, "assets/templates/base.html", "assets/templates/eventRow.html", "assets/templates/events.html")
+	r.AddFromFS("listEvents", content, base, "assets/templates/eventRow.html", "assets/templates/events.html")
 	r.AddFromFS("eventRow", content, "assets/templates/eventRow.html")
-	r.AddFromFS("createEvent", content, "assets/templates/base.html", "assets/templates/createEventForm.html")
+	r.AddFromFS("createEvent", content, base, "assets/templates/createEventForm.html")
 	r.AddFromFS("filesystem", content, "assets/templates/forms/filesystem.html")
 	r.AddFromFS("s3", content, "assets/templates/forms/s3.html")
-	r.AddFromFS("login", content, "assets/templates/base.html", "assets/templates/login.html")
-	r.AddFromFS("register", content, "assets/templates/base.html", "assets/templates/register.html")
+	r.AddFromFS("login", content, base, "assets/templates/login.html")
+	r.AddFromFS("register", content, base, "assets/templates/register.html")
+	r.AddFromFS("profile", content, base, "assets/templates/profile.html")
 	return r
 }
 
@@ -62,6 +72,9 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	authRequired := middleware.AuthRequired(cfg.Server.SecretKey, db)
 	userEventMiddleware := middleware.UserAuthorizedForEvent(db, "id", "eventId")
 
+	// public static pages
+	r.GET("/", getIndex())
+
 	// htmx middleware to handle errors nicely
 	hr := r.Group("/")
 	hr.Use(htmxMiddleware)
@@ -73,6 +86,7 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hra.GET("/event/new", getCreateEvent())
 	hra.POST("/event", createEvent(svc, htmx))
 	hra.GET("/events", getEvents(svc))
+	hra.GET("/profile", getProfile())
 	hra.GET("/storageForm", getStorageForm())
 
 	hra.DELETE("/event/:id", userEventMiddleware, deleteEvent(svc))
@@ -83,6 +97,7 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hr.GET("/register", getRegisterForm())
 	hr.GET("/event/:id", getEvent(svc))
 	hr.GET("/thumbnails/:id", getThumbnails(svc))
+	hr.POST("/contact", postContactForm(&http.Client{}, cfg.Server.FormbeeKey))
 
 	// SSE handler and goroutine to listen for new thumbnails and send new data
 	hr.GET("/sse", broker.ServeHTTP)
@@ -113,6 +128,36 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 		defer sub.Drain()
 		select {}
 	}()
+}
+
+func getIndex() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index", gin.H{
+			"title":    "eventpix",
+			"features": templatedata.IndexFeatures,
+			"pricing":  templatedata.IndexPriceTiers,
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name":   "Home",
+						"active": true,
+						"href":   "/",
+					},
+					{
+						"name":   "About",
+						"active": false,
+						"href":   "#features",
+					},
+					{
+						"name":   "Contact",
+						"active": false,
+						"href":   "#contactForm",
+					},
+				},
+			},
+		})
+	}
 }
 
 func getEvent(svc service.EventpixService) gin.HandlerFunc {
@@ -251,7 +296,22 @@ func getEvents(svc service.EventpixService) gin.HandlerFunc {
 		c.HTML(200, "listEvents", gin.H{
 			"title":  "Events",
 			"events": events.GetEvents(),
-			"user":   lo.Must(c.Get(gin.AuthUserKey)),
+			"user":   user,
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name":   "Events",
+						"active": true,
+						"href":   "/events",
+					},
+					{
+						"name":         "Profile",
+						"href":         "/profile",
+						"userRequired": true,
+					},
+				},
+			},
 		})
 	}
 }
@@ -277,12 +337,105 @@ func getStorageForm() gin.HandlerFunc {
 
 func getLoginForm() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.HTML(200, "login", gin.H{"title": "Login"})
+		c.HTML(200, "login", gin.H{
+			"title": "Login",
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name": "Home",
+						"href": "/",
+					},
+				},
+			},
+		})
 	}
 }
 
 func getRegisterForm() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.HTML(200, "register", gin.H{"title": "Register"})
+		c.HTML(200, "register", gin.H{
+			"title": "Register",
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name": "Home",
+						"href": "/",
+					},
+				},
+			},
+		})
+	}
+}
+
+func getProfile() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.HTML(200, "profile", gin.H{
+			"title": "Profile",
+			"user":  c.MustGet(gin.AuthUserKey).(*db.User),
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name": "Events",
+						"href": "/events",
+					},
+					{
+						"name":         "Profile",
+						"href":         "/profile",
+						"active":       true,
+						"userRequired": true,
+					},
+				},
+			},
+		})
+	}
+}
+
+func postContactForm(client *http.Client, apiKey string) gin.HandlerFunc {
+	type request struct {
+		Name        string `form:"user" json:"name" binding:"required"`
+		Email       string `form:"email" json:"email" binding:"required"`
+		PhoneNumber string `form:"phone" json:"phone" binding:"required"`
+		Message     string `form:"message" json:"message" binding:"required"`
+	}
+	url, err := url.JoinPath("https://api.formbee.dev/formbee", apiKey)
+	if err != nil {
+		panic(err)
+	}
+
+	return func(c *gin.Context) {
+		var req request
+		if err := c.ShouldBindJSON(&req); err != nil {
+			AbortWithError(c, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		// any additional validation
+
+		// send back to json for formbee
+		body, err := json.Marshal(req)
+		if err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(c, time.Second*5)
+		defer cancel()
+		formbeeReq, err := http.NewRequest("POST", url, bytes.NewReader(body))
+		if err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
+		formbeeReq.Header.Add("Content-Type", "application/json")
+		formbeeReq = formbeeReq.WithContext(ctx)
+
+		if _, err := client.Do(formbeeReq); err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		c.String(http.StatusOK, `<div class="text-center">Thank you for your message. We will be in touch soon.</div>`)
 	}
 }

@@ -3,6 +3,7 @@ server:
   environment: development
   serverUrl: http://localhost:8080
   secretKey: CHANGEME
+  formbeeKey: APIKEY
 database:
   driver: sqlite
   uri: ./scratch/test.db

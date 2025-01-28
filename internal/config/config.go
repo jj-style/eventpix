@@ -15,6 +15,7 @@ type Server struct {
 	Environment string `yaml:"environment"`
 	ServerUrl   string `yaml:"serverUrl"`
 	SecretKey   string `yaml:"secretKey"`
+	FormbeeKey  string `yaml:"formbeeKey"`
 }
 
 type Database struct {
