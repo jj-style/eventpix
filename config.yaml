@@ -4,6 +4,11 @@ server:
   serverUrl: http://localhost:8080
   secretKey: CHANGEME
   formbeeKey: APIKEY
+oauth:
+  google:
+    secretsFile: 'TODO'
+    appId: 'TODO'
+    redirectUri: 'TODO'
 database:
   driver: sqlite
   uri: ./scratch/test.db

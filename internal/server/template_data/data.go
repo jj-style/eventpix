@@ -40,10 +40,6 @@ var (
 						Included: true,
 					},
 					{
-						Name:     "24/7 support",
-						Included: false,
-					},
-					{
 						Name:     "your own server running either remotely or at your event",
 						Included: false,
 					},
@@ -65,10 +61,6 @@ var (
 						},
 						{
 							Name:     "QR code for event",
-							Included: true,
-						},
-						{
-							Name:     "24/7 support",
 							Included: true,
 						},
 						{
@@ -94,10 +86,6 @@ var (
 					},
 					{
 						Name:     "QR code for event",
-						Included: true,
-					},
-					{
-						Name:     "24/7 support",
 						Included: true,
 					},
 					{

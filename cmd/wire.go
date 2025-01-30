@@ -17,13 +17,13 @@ import (
 )
 
 func initializeServer(cfg *config.Config, logger *zap.Logger) (*serverApp, func(), error) {
-	panic(wire.Build(config.Provider, newNats, newHtmx, db.NewDb, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
+	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newHtmx, db.NewDb, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
 }
 
 func initializeThumbnailer(cfg *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
-	panic(wire.Build(config.Provider, newNats, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
+	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
 }
 
 func initializeThumbnailerWithNats(cfg *config.Config, logger *zap.Logger, nc *nats.Conn) (*service.Thumbnailer, func(), error) {
-	panic(wire.Build(config.Provider, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
+	panic(wire.Build(config.Provider, newGoogleDriveConfig, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
 }

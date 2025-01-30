@@ -17,6 +17,7 @@ import (
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 )
 
 //go:embed assets/static/**/*
@@ -31,6 +32,7 @@ func NewHttpServer(
 	db db.DB,
 	nc *nats.Conn,
 	logger *zap.Logger,
+	googleOauthConfig *oauth2.Config,
 ) *http.Server {
 
 	r := gin.New()
@@ -48,7 +50,7 @@ func NewHttpServer(
 	authGroup.Use(htmxMiddleware)
 	authGroup.POST("/login", authService.Login)
 	authGroup.POST("/register", authService.Register)
-	authGroup.POST("/logout", authRequired, authService.Logout)
+	authGroup.GET("/logout", authRequired, authService.Logout)
 
 	// serve static assets (html/css/js/images)
 	r.StaticFS("/static", static.EmbedFolder(staticFs, "assets/static"))
@@ -58,6 +60,10 @@ func NewHttpServer(
 
 	storageGroup := r.Group("/storage")
 	handleStorage(storageGroup, storageService)
+
+	oauthGroup := r.Group("/oauth2")
+	oauthGroup.Use(authRequired)
+	handleOauth(oauthGroup, googleOauthConfig, db, htmxMiddleware)
 
 	// /upload
 	uploadGroup := r.Group("/upload")

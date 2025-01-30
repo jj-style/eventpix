@@ -49,6 +49,38 @@ func AuthRequired(secretKey string, db db.DB) gin.HandlerFunc {
 	}
 }
 
+// Middleware to parse and validate an auth cookie.
+// If valid, the the request is redirected to the given page
+func AuthRedirect(secretKey string, db db.DB, redirect string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// before request
+		cookie, err := c.Cookie(auth.CookieName)
+		if err != nil {
+			c.Next()
+			return
+		}
+		claims, err := auth.VerifyToken(secretKey, cookie)
+		if err != nil {
+			c.Next()
+			return
+		}
+		subj, err := claims.GetSubject()
+		if err != nil {
+			c.Next()
+			return
+		}
+		user, err := db.GetUser(c, subj)
+		if err != nil {
+			c.Next()
+			return
+		}
+		c.Set(gin.AuthUserKey, user)
+
+		c.Redirect(http.StatusTemporaryRedirect, redirect)
+		c.Abort()
+	}
+}
+
 // Middleware to obtain the user from the context set from `AuthRequired`.
 // It extracts the event ID from the path parameter and queries to DB to ensure the user is authorized
 // to act on the event.

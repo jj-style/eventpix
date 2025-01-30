@@ -1,8 +1,9 @@
 {{ define "head" }}{{ end }}
 
 {{ define "content" }}
+
 <div class="container">
-    <h1>Profile</h1>
+    <h3>Profile</h3>
     <table class="table">
         <tbody>
             <tr>
@@ -12,6 +13,46 @@
         </tbody>
     </table>
 </div>
+
+<div class="container">
+    <h3>Plugins</h3>
+    <table class="table">
+        <tbody>
+            <tr>
+                <td>Google Drive</td>
+                <td>
+                    {{ if $.user.GoogleDriveToken }}
+                    <a style="color: green;" role="button" hx-delete="/oauth2/google" hx-on::before-request="revokeToken('{{$.googleToken.AccessToken}}');"><i class="bi bi-toggle-on"></i></a>
+                    {{ else }}
+                    <a style="color: red;" role="button" onclick="getCode();"><i class="bi bi-toggle-off"></i></a>
+                    {{ end }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
 {{ end }}
 
-{{ define "scripts" }}{{ end }}
+{{ define "scripts" }}
+<script>
+var client;
+function initClient() {
+  client = google.accounts.oauth2.initCodeClient({
+    client_id: "{{ .oauthConfig.Google.AppId }}",
+    scope: "https://www.googleapis.com/auth/drive.file",
+    ux_mode: 'redirect',
+    redirect_uri: "{{ .oauthConfig.Google.RedirectUri }}",
+  });
+}
+function getCode() {
+  client.requestCode();
+}
+function revokeToken(access_token) {
+  google.accounts.oauth2.revoke(access_token, (response) => {
+    console.log("access token revoked", response);
+  });
+}
+</script>
+<script src="https://accounts.google.com/gsi/client" onload="initClient()" async defer></script>
+{{ end }}

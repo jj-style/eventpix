@@ -13,12 +13,14 @@ type Event struct {
 	FileInfos      []FileInfo
 	ThumbnailInfos []ThumbnailInfo
 	UserID         uint
+	User           User
 
 	storage.Storage `gorm:"-"`
 	// All available storage options for the event
 	// Only one should be set, the rest must be null
-	FileSystemStorage *FileSystemStorage
-	S3Storage         *S3Storage
+	FileSystemStorage  *FileSystemStorage
+	S3Storage          *S3Storage
+	GoogleDriveStorage *GoogleDriveStorage
 }
 
 type FileInfo struct {
@@ -42,10 +44,11 @@ type ThumbnailInfo struct {
 
 type User struct {
 	gorm.Model
-	Username string
-	Password string
-	Admin    bool
-	Events   []Event
+	Username         string
+	Password         string
+	Admin            bool
+	Events           []Event
+	GoogleDriveToken *GoogleDriveToken
 }
 
 type FileSystemStorage struct {
@@ -63,4 +66,17 @@ type S3Storage struct {
 	Bucket    string
 	Endpoint  string
 	EventID   uint
+}
+
+type GoogleDriveStorage struct {
+	gorm.Model
+	DirectoryID string
+	EventID     uint
+}
+
+type GoogleDriveToken struct {
+	gorm.Model
+	// TODO(jj): encrypt at rest
+	Token  []byte
+	UserID uint
 }

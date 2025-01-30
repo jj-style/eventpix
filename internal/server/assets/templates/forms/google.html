@@ -1,0 +1,23 @@
+<h3>Google Drive Storage Configuration</h3>
+<div class="mb-3">
+    <label for="folderId" class="form-label">Folder ID</label>
+    <input
+        name="googleDrive[folderId]"
+        type="text"
+        class="form-control"
+        aria-label="folderId"
+        required
+    >
+    <button class="mt-2 btn btn-outline-info btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#howToGetFolderId" aria-expanded="false" aria-controls="howToGetFolderId">
+        How to find ID of folder?
+    </button>
+    <div class="collapse" id="howToGetFolderId">
+        <div class="card card-body">
+            <ol>
+                <li>Open the desired folder in <a target="_blank" rel="noreferrer" href="https://drive.google.com">Google Drive</a></li>
+                <li>Look at your address bar to find a URL like <code>https://drive.google.com/drive/folders/1aBcDeFgHiJkLmNoPQrStUvWxZy</code></li>
+                <li>The folder ID is the string of characters after <code>folders/</code>. In the example above, this is <code>1aBcDeFgHiJkLmNoPQrStUvWxZy</code></li>
+            </ol>
+        </div>
+    </div>
+</div>

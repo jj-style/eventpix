@@ -28,6 +28,7 @@ import (
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
 	"github.com/samber/lo"
+	"golang.org/x/oauth2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
@@ -54,6 +55,8 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFS("createEvent", content, base, "assets/templates/createEventForm.html")
 	r.AddFromFS("filesystem", content, "assets/templates/forms/filesystem.html")
 	r.AddFromFS("s3", content, "assets/templates/forms/s3.html")
+	r.AddFromFS("google", content, "assets/templates/forms/google.html")
+
 	r.AddFromFS("login", content, base, "assets/templates/login.html")
 	r.AddFromFS("register", content, base, "assets/templates/register.html")
 	r.AddFromFS("profile", content, base, "assets/templates/profile.html")
@@ -71,6 +74,7 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 
 	authRequired := middleware.AuthRequired(cfg.Server.SecretKey, db)
 	userEventMiddleware := middleware.UserAuthorizedForEvent(db, "id", "eventId")
+	authRedirectMiddleware := middleware.AuthRedirect(cfg.Server.SecretKey, db, "/events")
 
 	// public static pages
 	r.GET("/", getIndex())
@@ -86,15 +90,15 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hra.GET("/event/new", getCreateEvent())
 	hra.POST("/event", createEvent(svc, htmx))
 	hra.GET("/events", getEvents(svc))
-	hra.GET("/profile", getProfile())
+	hra.GET("/profile", getProfile(cfg.OauthSecrets))
 	hra.GET("/storageForm", getStorageForm())
 
 	hra.DELETE("/event/:id", userEventMiddleware, deleteEvent(svc))
 	hra.POST("/event/:id/live", userEventMiddleware, setEventLive(svc))
 
 	// public view
-	hr.GET("/login", getLoginForm())
-	hr.GET("/register", getRegisterForm())
+	hr.GET("/login", authRedirectMiddleware, getLoginForm())
+	hr.GET("/register", authRedirectMiddleware, getRegisterForm())
 	hr.GET("/event/:id", getEvent(svc))
 	hr.GET("/thumbnails/:id", getThumbnails(svc))
 	hr.POST("/contact", postContactForm(&http.Client{}, cfg.Server.FormbeeKey))
@@ -130,52 +134,7 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	}()
 }
 
-func getIndex() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index", gin.H{
-			"title":    "eventpix",
-			"features": templatedata.IndexFeatures,
-			"pricing":  templatedata.IndexPriceTiers,
-			"nav": gin.H{
-				"dark": true,
-				"items": []gin.H{
-					{
-						"name":   "Home",
-						"active": true,
-						"href":   "/",
-					},
-					{
-						"name":   "About",
-						"active": false,
-						"href":   "#features",
-					},
-					{
-						"name":   "Contact",
-						"active": false,
-						"href":   "#contactForm",
-					},
-				},
-			},
-		})
-	}
-}
-
-func getEvent(svc service.EventpixService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		pEventId := c.Param("id")
-		eventId, err := strconv.ParseUint(pEventId, 10, 64)
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		event, err := svc.GetEvent(c, &picturev1.GetEventRequest{Id: eventId})
-		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
-		}
-		c.HTML(http.StatusOK, "eventGallery", gin.H{"title": event.Event.Name, "event": event.Event})
-	}
-}
+// === PARTIALS / HANDLERS ===
 
 func deleteEvent(svc service.EventpixService) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -209,6 +168,15 @@ func createEvent(svc service.EventpixService, htmx *htmx.HTMX) gin.HandlerFunc {
 		}
 
 		user := c.MustGet(gin.AuthUserKey).(*db.User)
+
+		// validation
+		switch req.GetStorage().(type) {
+		case *picturev1.CreateEventRequest_GoogleDrive:
+			if user.GoogleDriveToken == nil {
+				AbortWithError(c, http.StatusUnprocessableEntity, errors.New("google drive integration not setup for user"))
+				return
+			}
+		}
 
 		resp, err := svc.CreateEvent(c, user.ID, req)
 		if err != nil {
@@ -284,112 +252,9 @@ func getThumbnails(svc service.EventpixService) gin.HandlerFunc {
 	}
 }
 
-func getEvents(svc service.EventpixService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		user := c.MustGet(gin.AuthUserKey).(*db.User)
-		events, err := svc.GetEvents(c, &picturev1.GetEventsRequest{}, user.ID)
-		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
-			return
-		}
-
-		c.HTML(200, "listEvents", gin.H{
-			"title":  "Events",
-			"events": events.GetEvents(),
-			"user":   user,
-			"nav": gin.H{
-				"dark": true,
-				"items": []gin.H{
-					{
-						"name":   "Events",
-						"active": true,
-						"href":   "/events",
-					},
-					{
-						"name":         "Profile",
-						"href":         "/profile",
-						"userRequired": true,
-					},
-				},
-			},
-		})
-	}
-}
-
-func getCreateEvent() gin.HandlerFunc {
-	stTypes := []struct {
-		Name  string
-		Value string
-	}{
-		{Name: "Filesystem", Value: "filesystem"},
-		{Name: "S3", Value: "s3"},
-	}
-	return func(c *gin.Context) {
-		c.HTML(200, "createEvent", gin.H{"title": "New Event", "storageTypes": stTypes})
-	}
-}
-
 func getStorageForm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(200, c.Query("storage"), nil)
-	}
-}
-
-func getLoginForm() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.HTML(200, "login", gin.H{
-			"title": "Login",
-			"nav": gin.H{
-				"dark": true,
-				"items": []gin.H{
-					{
-						"name": "Home",
-						"href": "/",
-					},
-				},
-			},
-		})
-	}
-}
-
-func getRegisterForm() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.HTML(200, "register", gin.H{
-			"title": "Register",
-			"nav": gin.H{
-				"dark": true,
-				"items": []gin.H{
-					{
-						"name": "Home",
-						"href": "/",
-					},
-				},
-			},
-		})
-	}
-}
-
-func getProfile() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.HTML(200, "profile", gin.H{
-			"title": "Profile",
-			"user":  c.MustGet(gin.AuthUserKey).(*db.User),
-			"nav": gin.H{
-				"dark": true,
-				"items": []gin.H{
-					{
-						"name": "Events",
-						"href": "/events",
-					},
-					{
-						"name":         "Profile",
-						"href":         "/profile",
-						"active":       true,
-						"userRequired": true,
-					},
-				},
-			},
-		})
 	}
 }
 
@@ -437,5 +302,204 @@ func postContactForm(client *http.Client, apiKey string) gin.HandlerFunc {
 		}
 
 		c.String(http.StatusOK, `<div class="text-center">Thank you for your message. We will be in touch soon.</div>`)
+	}
+}
+
+// === PAGES ===
+
+func getIndex() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index", gin.H{
+			"title":    "eventpix",
+			"features": templatedata.IndexFeatures,
+			"pricing":  templatedata.IndexPriceTiers,
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name":   "Home",
+						"active": true,
+						"href":   "/",
+					},
+					{
+						"name":   "About",
+						"active": false,
+						"href":   "#features",
+					},
+					{
+						"name":   "Contact",
+						"active": false,
+						"href":   "#contactForm",
+					},
+				},
+			},
+		})
+	}
+}
+
+func getProfile(oauthCfg *config.OauthSecrets) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet(gin.AuthUserKey).(*db.User)
+		var googleToken oauth2.Token
+		if user.GoogleDriveToken != nil {
+			err := json.Unmarshal(user.GoogleDriveToken.Token, &googleToken)
+			if err != nil {
+				AbortWithError(c, http.StatusInternalServerError, err)
+				return
+			}
+		}
+		c.HTML(200, "profile", gin.H{
+			"title":       "Profile",
+			"user":        user,
+			"googleToken": googleToken,
+			"oauthConfig": oauthCfg,
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name": "Events",
+						"href": "/events",
+					},
+					{
+						"name":         "Profile",
+						"href":         "/profile",
+						"active":       true,
+						"userRequired": true,
+					},
+					{
+						"name":         "Logout",
+						"href":         "/auth/logout",
+						"userRequired": true,
+					},
+				},
+			},
+		})
+	}
+}
+
+func getLoginForm() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.HTML(200, "login", gin.H{
+			"title": "Login",
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name": "Home",
+						"href": "/",
+					},
+				},
+			},
+		})
+	}
+}
+
+func getRegisterForm() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.HTML(200, "register", gin.H{
+			"title": "Register",
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name": "Home",
+						"href": "/",
+					},
+				},
+			},
+		})
+	}
+}
+
+func getCreateEvent() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet(gin.AuthUserKey).(*db.User)
+		stTypes := []struct {
+			Name     string
+			Value    string
+			Disabled bool
+		}{
+			{Name: "Filesystem", Value: "filesystem"},
+			{Name: "S3", Value: "s3"},
+			{Name: "Google", Value: "google", Disabled: user.GoogleDriveToken == nil},
+		}
+		c.HTML(200, "createEvent", gin.H{
+			"title": "New Event",
+			"user":  c.MustGet(gin.AuthUserKey).(*db.User),
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name": "Events",
+						"href": "/events",
+					},
+					{
+						"name":         "Profile",
+						"href":         "/profile",
+						"userRequired": true,
+					},
+					{
+						"name":         "Logout",
+						"href":         "/auth/logout",
+						"userRequired": true,
+					},
+				},
+			},
+			"storageTypes": stTypes,
+		})
+	}
+}
+
+func getEvents(svc service.EventpixService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet(gin.AuthUserKey).(*db.User)
+		events, err := svc.GetEvents(c, &picturev1.GetEventsRequest{}, user.ID)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
+		c.HTML(200, "listEvents", gin.H{
+			"title":  "Events",
+			"events": events.GetEvents(),
+			"user":   user,
+			"nav": gin.H{
+				"dark": true,
+				"items": []gin.H{
+					{
+						"name":   "Events",
+						"active": true,
+						"href":   "/events",
+					},
+					{
+						"name":         "Profile",
+						"href":         "/profile",
+						"userRequired": true,
+					},
+					{
+						"name":         "Logout",
+						"href":         "/auth/logout",
+						"userRequired": true,
+					},
+				},
+			},
+		})
+	}
+}
+
+func getEvent(svc service.EventpixService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		pEventId := c.Param("id")
+		eventId, err := strconv.ParseUint(pEventId, 10, 64)
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		event, err := svc.GetEvent(c, &picturev1.GetEventRequest{Id: eventId})
+		if err != nil {
+			c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
+		c.HTML(http.StatusOK, "eventGallery", gin.H{"title": event.Event.Name, "event": event.Event})
 	}
 }

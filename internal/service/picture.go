@@ -58,6 +58,10 @@ func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picture
 			Region:    st.S3.GetRegion(),
 			Endpoint:  st.S3.GetEndpoint(),
 		}
+	case *picturev1.CreateEventRequest_GoogleDrive:
+		createEvent.GoogleDriveStorage = &db.GoogleDriveStorage{
+			DirectoryID: st.GoogleDrive.GetFolderId(),
+		}
 	default:
 		return nil, errors.New("unsupported storage type")
 	}

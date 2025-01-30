@@ -83,7 +83,7 @@ func (x *AuthService) Register(c *gin.Context) {
 
 func (x *AuthService) Logout(c *gin.Context) {
 	h := x.htmx.NewHandler(c.Writer, c.Request)
-	c.SetCookie(auth.CookieName, "", -1, "/", "localhost", false, true)
+	c.SetCookie(auth.CookieName, "", -1, "/", "", false, true)
 	if h.IsHxRequest() {
 		h.Redirect("/login")
 	} else {

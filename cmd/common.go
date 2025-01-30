@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"errors"
+	"os"
 	"time"
 
 	"github.com/donseba/go-htmx"
@@ -10,6 +11,9 @@ import (
 	"github.com/jj-style/eventpix/internal/server"
 	"github.com/nats-io/nats.go"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/drive/v2"
 )
 
 func initLogger() *zap.Logger {
@@ -51,4 +55,12 @@ func newNats(cfg *config.Nats) (*nats.Conn, func(), error) {
 
 func newHtmx() *htmx.HTMX {
 	return htmx.New()
+}
+
+func newGoogleDriveConfig(cfg *config.Config) (*oauth2.Config, error) {
+	f, err := os.ReadFile(cfg.OauthSecrets.Google.SecretsFile)
+	if err != nil {
+		return nil, err
+	}
+	return google.ConfigFromJSON(f, drive.DriveFileScope)
 }

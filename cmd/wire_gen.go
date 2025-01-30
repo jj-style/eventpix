@@ -26,7 +26,12 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func
 	}
 	htmx := newHtmx()
 	database := config.DatabaseProvider(cfg2)
-	dbDB, cleanup2, err := db.NewDb(database, logger)
+	oauth2Config, err := newGoogleDriveConfig(cfg2)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	dbDB, cleanup2, err := db.NewDb(database, logger, oauth2Config)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
@@ -34,7 +39,7 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func
 	storageService := service.NewStorageService(dbDB, logger)
 	authService := service.NewAuthService(cfg2, dbDB, htmx)
 	eventpixService := service.NewEventpixService(logger, dbDB, conn)
-	httpServer := server.NewHttpServer(cfg2, htmx, storageService, authService, eventpixService, dbDB, conn, logger)
+	httpServer := server.NewHttpServer(cfg2, htmx, storageService, authService, eventpixService, dbDB, conn, logger, oauth2Config)
 	cmdServerApp, cleanup3, err := newServerApp(cfg2, logger, conn, httpServer)
 	if err != nil {
 		cleanup2()
@@ -50,7 +55,11 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func
 
 func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
 	database := config.DatabaseProvider(cfg2)
-	dbDB, cleanup, err := db.NewDb(database, logger)
+	oauth2Config, err := newGoogleDriveConfig(cfg2)
+	if err != nil {
+		return nil, nil, err
+	}
+	dbDB, cleanup, err := db.NewDb(database, logger, oauth2Config)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -75,7 +84,11 @@ func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Th
 
 func initializeThumbnailerWithNats(cfg2 *config.Config, logger *zap.Logger, nc *nats.Conn) (*service.Thumbnailer, func(), error) {
 	database := config.DatabaseProvider(cfg2)
-	dbDB, cleanup, err := db.NewDb(database, logger)
+	oauth2Config, err := newGoogleDriveConfig(cfg2)
+	if err != nil {
+		return nil, nil, err
+	}
+	dbDB, cleanup, err := db.NewDb(database, logger, oauth2Config)
 	if err != nil {
 		return nil, nil, err
 	}

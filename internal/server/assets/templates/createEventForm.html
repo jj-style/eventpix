@@ -21,7 +21,7 @@
     >
       <option disabled selected>Open this select menu</option>
       {{range .storageTypes}}
-      <option value="{{.Value}}">{{.Name}}</option>
+      <option value="{{.Value}}" {{if .Disabled}}disabled{{end}}>{{.Name}}</option>
       {{end}}
     </select>
   </div>

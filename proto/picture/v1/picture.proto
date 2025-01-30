@@ -30,6 +30,7 @@ message Event {
     oneof storage {
         Filesystem filesystem = 5;
         S3 s3 = 6;
+        GoogleDrive googleDrive = 7;
     }
 }
 
@@ -60,6 +61,7 @@ message CreateEventRequest {
     oneof storage {
         Filesystem filesystem = 3;
         S3 s3 = 4;
+        GoogleDrive googleDrive = 5;
     }
 }
 

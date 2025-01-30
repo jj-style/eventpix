@@ -268,6 +268,53 @@ func (_c *MockDB_DeleteEvent_Call) RunAndReturn(run func(context.Context, uint64
 	return _c
 }
 
+// DeleteGoogleToken provides a mock function with given fields: ctx, userId
+func (_m *MockDB) DeleteGoogleToken(ctx context.Context, userId uint) error {
+	ret := _m.Called(ctx, userId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for DeleteGoogleToken")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint) error); ok {
+		r0 = rf(ctx, userId)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockDB_DeleteGoogleToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteGoogleToken'
+type MockDB_DeleteGoogleToken_Call struct {
+	*mock.Call
+}
+
+// DeleteGoogleToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userId uint
+func (_e *MockDB_Expecter) DeleteGoogleToken(ctx interface{}, userId interface{}) *MockDB_DeleteGoogleToken_Call {
+	return &MockDB_DeleteGoogleToken_Call{Call: _e.mock.On("DeleteGoogleToken", ctx, userId)}
+}
+
+func (_c *MockDB_DeleteGoogleToken_Call) Run(run func(ctx context.Context, userId uint)) *MockDB_DeleteGoogleToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint))
+	})
+	return _c
+}
+
+func (_c *MockDB_DeleteGoogleToken_Call) Return(_a0 error) *MockDB_DeleteGoogleToken_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockDB_DeleteGoogleToken_Call) RunAndReturn(run func(context.Context, uint) error) *MockDB_DeleteGoogleToken_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetEvent provides a mock function with given fields: _a0, _a1
 func (_m *MockDB) GetEvent(_a0 context.Context, _a1 uint64) (*db.Event, error) {
 	ret := _m.Called(_a0, _a1)
@@ -441,6 +488,65 @@ func (_c *MockDB_GetFileInfo_Call) Return(_a0 *db.FileInfo, _a1 error) *MockDB_G
 }
 
 func (_c *MockDB_GetFileInfo_Call) RunAndReturn(run func(context.Context, string) (*db.FileInfo, error)) *MockDB_GetFileInfo_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetGoogleToken provides a mock function with given fields: ctx, uideId
+func (_m *MockDB) GetGoogleToken(ctx context.Context, uideId uint) ([]byte, error) {
+	ret := _m.Called(ctx, uideId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetGoogleToken")
+	}
+
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint) ([]byte, error)); ok {
+		return rf(ctx, uideId)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint) []byte); ok {
+		r0 = rf(ctx, uideId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint) error); ok {
+		r1 = rf(ctx, uideId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockDB_GetGoogleToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetGoogleToken'
+type MockDB_GetGoogleToken_Call struct {
+	*mock.Call
+}
+
+// GetGoogleToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - uideId uint
+func (_e *MockDB_Expecter) GetGoogleToken(ctx interface{}, uideId interface{}) *MockDB_GetGoogleToken_Call {
+	return &MockDB_GetGoogleToken_Call{Call: _e.mock.On("GetGoogleToken", ctx, uideId)}
+}
+
+func (_c *MockDB_GetGoogleToken_Call) Run(run func(ctx context.Context, uideId uint)) *MockDB_GetGoogleToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint))
+	})
+	return _c
+}
+
+func (_c *MockDB_GetGoogleToken_Call) Return(_a0 []byte, _a1 error) *MockDB_GetGoogleToken_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockDB_GetGoogleToken_Call) RunAndReturn(run func(context.Context, uint) ([]byte, error)) *MockDB_GetGoogleToken_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -680,6 +786,54 @@ func (_c *MockDB_SetEventLive_Call) Return(_a0 *db.Event, _a1 error) *MockDB_Set
 }
 
 func (_c *MockDB_SetEventLive_Call) RunAndReturn(run func(context.Context, uint64, bool) (*db.Event, error)) *MockDB_SetEventLive_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// StoreGoogleToken provides a mock function with given fields: ctx, userId, token
+func (_m *MockDB) StoreGoogleToken(ctx context.Context, userId uint, token []byte) error {
+	ret := _m.Called(ctx, userId, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for StoreGoogleToken")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint, []byte) error); ok {
+		r0 = rf(ctx, userId, token)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockDB_StoreGoogleToken_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'StoreGoogleToken'
+type MockDB_StoreGoogleToken_Call struct {
+	*mock.Call
+}
+
+// StoreGoogleToken is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userId uint
+//   - token []byte
+func (_e *MockDB_Expecter) StoreGoogleToken(ctx interface{}, userId interface{}, token interface{}) *MockDB_StoreGoogleToken_Call {
+	return &MockDB_StoreGoogleToken_Call{Call: _e.mock.On("StoreGoogleToken", ctx, userId, token)}
+}
+
+func (_c *MockDB_StoreGoogleToken_Call) Run(run func(ctx context.Context, userId uint, token []byte)) *MockDB_StoreGoogleToken_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint), args[2].([]byte))
+	})
+	return _c
+}
+
+func (_c *MockDB_StoreGoogleToken_Call) Return(_a0 error) *MockDB_StoreGoogleToken_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockDB_StoreGoogleToken_Call) RunAndReturn(run func(context.Context, uint, []byte) error) *MockDB_StoreGoogleToken_Call {
 	_c.Call.Return(run)
 	return _c
 }

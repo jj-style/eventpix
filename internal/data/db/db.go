@@ -10,6 +10,7 @@ import (
 	"github.com/jj-style/eventpix/internal/pkg/utils/auth"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
+	"golang.org/x/oauth2"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -31,14 +32,18 @@ type DB interface {
 	CreateUser(context.Context, string, string) error
 	GetUser(context.Context, string) (*User, error)
 	UserAuthorizedForEvent(context.Context, uint, uint) (bool, error)
+	StoreGoogleToken(ctx context.Context, userId uint, token []byte) error
+	GetGoogleToken(ctx context.Context, uideId uint) ([]byte, error)
+	DeleteGoogleToken(ctx context.Context, userId uint) error
 }
 
 type dbImpl struct {
-	db  *gorm.DB
-	log *zap.SugaredLogger
+	db                *gorm.DB
+	log               *zap.SugaredLogger
+	googleOauthConfig *oauth2.Config
 }
 
-func NewDb(cfg *config.Database, logger *zap.Logger) (DB, func(), error) {
+func NewDb(cfg *config.Database, logger *zap.Logger, googleOauthConfig *oauth2.Config) (DB, func(), error) {
 	var dialector gorm.Dialector
 	switch cfg.Driver {
 	case "sqlite":
@@ -57,11 +62,13 @@ func NewDb(cfg *config.Database, logger *zap.Logger) (DB, func(), error) {
 	// Migrate the schema
 	if err := db.AutoMigrate(
 		&User{},
+		&GoogleDriveToken{},
 		&Event{},
 		&FileInfo{},
 		&ThumbnailInfo{},
 		&FileSystemStorage{},
 		&S3Storage{},
+		&GoogleDriveStorage{},
 	); err != nil {
 		return nil, func() {}, fmt.Errorf("migrating db: %w", err)
 	}
@@ -75,7 +82,7 @@ func NewDb(cfg *config.Database, logger *zap.Logger) (DB, func(), error) {
 		}).
 		FirstOrCreate(&admin)
 
-	return &dbImpl{db, logger.Sugar()}, func() {}, nil
+	return &dbImpl{db, logger.Sugar(), googleOauthConfig}, func() {}, nil
 }
 
 func (d *dbImpl) CreateEvent(ctx context.Context, evt *Event) (uint, error) {
@@ -119,7 +126,10 @@ func (d *dbImpl) GetEvents(ctx context.Context, userId uint) ([]*Event, error) {
 
 func (d *dbImpl) GetEvent(ctx context.Context, id uint64) (*Event, error) {
 	var event Event
-	result := d.db.WithContext(ctx).Preload(clause.Associations).First(&event, id)
+	result := d.db.WithContext(ctx).
+		Preload(clause.Associations).
+		Preload("User.GoogleDriveToken").
+		First(&event, id)
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			d.log.Errorf("event(%d) not found in db", id)
@@ -130,7 +140,7 @@ func (d *dbImpl) GetEvent(ctx context.Context, id uint64) (*Event, error) {
 		}
 	}
 
-	if err := ExtractEventStorage(&event); err != nil {
+	if err := ExtractEventStorage(&event, d.googleOauthConfig); err != nil {
 		d.log.Errorf("extracting event(%d) storage: %v", id, err)
 		return nil, err
 	}
@@ -226,7 +236,7 @@ func (d *dbImpl) CreateUser(ctx context.Context, username string, password strin
 
 func (d *dbImpl) GetUser(ctx context.Context, username string) (*User, error) {
 	var user User
-	result := d.db.WithContext(ctx).Where("username = ?", username).First(&user)
+	result := d.db.WithContext(ctx).Preload(clause.Associations).Where("username = ?", username).First(&user)
 	if result.RowsAffected < 1 {
 		return nil, errors.New("user not found")
 	}
@@ -244,5 +254,34 @@ func (d *dbImpl) UserAuthorizedForEvent(ctx context.Context, userId, eventId uin
 		} else {
 			return false, err
 		}
+	}
+}
+
+func (d *dbImpl) StoreGoogleToken(ctx context.Context, userId uint, token []byte) error {
+	return d.db.WithContext(ctx).
+		Create(&GoogleDriveToken{Token: token, UserID: userId}).Error
+}
+
+func (d *dbImpl) GetGoogleToken(ctx context.Context, userId uint) ([]byte, error) {
+	var goog GoogleDriveToken
+	result := d.db.WithContext(ctx).
+		Where(&GoogleDriveToken{UserID: userId}).
+		First(&goog)
+	if err := result.Error; err != nil {
+		return nil, err
+	}
+	return goog.Token, nil
+}
+
+func (d *dbImpl) DeleteGoogleToken(ctx context.Context, userId uint) error {
+	err := d.db.WithContext(ctx).Unscoped().Delete(&GoogleDriveToken{}, "user_id = ?", userId).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		return nil
 	}
 }
