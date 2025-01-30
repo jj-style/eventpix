@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/YamiOdymel/multitemplate"
 	"github.com/donseba/go-htmx"
+	"github.com/g4s8/hexcolor"
 	"github.com/gin-gonic/gin"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
@@ -28,6 +30,7 @@ import (
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
 	"github.com/samber/lo"
+	"github.com/skip2/go-qrcode"
 	"golang.org/x/oauth2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -60,6 +63,8 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFS("login", content, base, "assets/templates/login.html")
 	r.AddFromFS("register", content, base, "assets/templates/register.html")
 	r.AddFromFS("profile", content, base, "assets/templates/profile.html")
+
+	r.AddFromFS("qrModal", content, "assets/templates/components/qrModal.html")
 	return r
 }
 
@@ -90,6 +95,8 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hra.GET("/event/new", getCreateEvent())
 	hra.POST("/event", createEvent(svc, htmx))
 	hra.GET("/events", getEvents(svc))
+	hra.GET("/event/:id/qr/modal", userEventMiddleware, getEventQrModal(svc))
+	hra.GET("/event/:id/qr", userEventMiddleware, getQrCode(cfg))
 	hra.GET("/profile", getProfile(cfg.OauthSecrets))
 	hra.GET("/storageForm", getStorageForm())
 
@@ -302,6 +309,70 @@ func postContactForm(client *http.Client, apiKey string) gin.HandlerFunc {
 		}
 
 		c.String(http.StatusOK, `<div class="text-center">Thank you for your message. We will be in touch soon.</div>`)
+	}
+}
+
+func getEventQrModal(svc service.EventpixService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		eventId := c.MustGet("eventId").(uint64)
+		event, err := svc.GetEvent(c, &picturev1.GetEventRequest{Id: eventId})
+		if err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		c.HTML(http.StatusOK, "qrModal", gin.H{
+			"event": event.GetEvent(),
+		})
+	}
+}
+
+func getQrCode(cfg *config.Config) gin.HandlerFunc {
+	type request struct {
+		Size       int    `form:"size"`
+		Foreground string `form:"foreground"`
+		Background string `form:"background"`
+	}
+
+	return func(c *gin.Context) {
+		var req request
+		if err := c.Bind(&req); err != nil {
+			AbortWithError(c, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		eventId := c.MustGet("eventId").(uint64)
+		eventUrl := fmt.Sprintf("%s/event/%d", cfg.Server.ServerUrl, eventId)
+
+		q, err := qrcode.New(eventUrl, qrcode.Medium)
+		if err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		foreground, err := hexcolor.Parse(req.Foreground)
+		if err != nil {
+			AbortWithError(c, http.StatusUnprocessableEntity, err)
+			return
+		}
+		background, err := hexcolor.Parse(req.Background)
+		if err != nil {
+			AbortWithError(c, http.StatusUnprocessableEntity, err)
+			return
+		}
+		q.ForegroundColor = foreground
+		q.BackgroundColor = background
+
+		png, err := q.PNG(req.Size)
+		if err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		b64 := base64.StdEncoding.EncodeToString(png)
+
+		c.String(http.StatusOK, `<img id="eventQrCode" class="mx-auto" src="data:image/png;base64, %s" alt="QR code for %s" />`, b64, eventUrl)
+
 	}
 }
 

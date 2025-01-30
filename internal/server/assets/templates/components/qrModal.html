@@ -1,0 +1,37 @@
+<div class="modal-dialog modal-dialog-centered">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Generate QR code for event: {{.event.Name}}</h5>
+    </div>
+    <div class="modal-body">
+        <div id="qrCode" class="d-flex"></div>
+        <form
+            class="d-flex flex-column align-items-center" 
+            hx-get="/event/{{.event.Id}}/qr" 
+            hx-target="#qrCode" 
+            hx-trigger="load,change"
+        >
+            <div class="form-row">
+                <div class="form-group d-flex">
+                    <label class="mx-2" for="size">Size</label>
+                    <input type="range" min="1" max="512" value="256" class="slider" id="size" name="size">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="col form-group d-flex">
+                    <label class="mx-2" for="foreground">Foreground Colour</label>
+                    <input type="color" id="foreground" name="foreground" value="#000000">
+                </div>
+                <div class="col form-group d-flex">
+                    <label class="mx-2" for="background">Background Colour</label>
+                    <input type="color" id="background" name="background" value="#ffffff">
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <button type="button" class="btn btn-primary" hx-on:click="downloadQrCode()">Download</button>
+    </div>
+  </div>
+</div>

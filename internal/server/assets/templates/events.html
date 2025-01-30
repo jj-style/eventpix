@@ -15,7 +15,8 @@
       <tr>
         <th>Name</th>
         <th>Live</th>
-        <th></th>
+        <th>QR</th>
+        <th>Delete</th>
       </tr>
     </thead>
 
@@ -26,8 +27,28 @@
     </tbody>
   </table>
 </div>
+
+<div id="qrModal"
+    class="modal modal-blur fade"
+    style="display: none"
+    aria-hidden="false"
+    tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content"></div>
+    </div>
+</div>
+
 {{ end }}
 
 {{ define "scripts" }}
+<script>
+function downloadQrCode() {
+  var qrImg = document.getElementById("eventQrCode");
+  var a = document.createElement("a");
+  a.href = qrImg.src;
+  a.download = "qrcode.png";
+  a.click();
+}
+</script>
 <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/json-enc.js"></script>
 {{ end }}

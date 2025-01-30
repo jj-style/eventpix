@@ -13,6 +13,17 @@
 </td>
 <td>
     <button
+        class="btn btn-outline-secondary"
+        data-bs-toggle="modal" data-bs-target="#qrModal"
+        hx-get="/event/{{.Id}}/qr/modal"
+        hx-target="#qrModal"
+        hx-swap="innerHTML"
+    >
+    <i class="bi bi-qr-code"></i>
+    </button>
+</td>
+<td>
+    <button
         class="btn btn-outline-danger"
         hx-confirm="Are you sure you want to delete the event {{.Name }}. Your pictures will not be deleted."
         hx-delete="/event/{{.Id}}"
