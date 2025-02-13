@@ -14,6 +14,6 @@ var (
 //
 //go:generate go run github.com/vektra/mockery/v2
 type Storage interface {
-	Store(context.Context, string, io.Reader) error
+	Store(context.Context, string, io.Reader) (string, error)
 	Get(context.Context, string) (io.ReadCloser, error)
 }

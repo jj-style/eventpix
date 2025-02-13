@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"golang.org/x/oauth2"
@@ -15,24 +14,17 @@ type googleDriveStore struct {
 	folderId string
 }
 
-func (g *googleDriveStore) Get(ctx context.Context, name string) (io.ReadCloser, error) {
-	got, err := g.drive.Files.List().Q(fmt.Sprintf("name = '%s'", name)).Do()
-	if err != nil {
-		return nil, err
-	}
-	if len(got.Files) == 0 {
-		return nil, ErrFileNotFound
-	}
-	resp, err := g.drive.Files.Get(got.Files[0].Id).Download()
+func (g *googleDriveStore) Get(ctx context.Context, id string) (io.ReadCloser, error) {
+	resp, err := g.drive.Files.Get(id).Download()
 	return resp.Body, err
 }
 
-func (g *googleDriveStore) Store(ctx context.Context, name string, data io.Reader) error {
-	_, err := g.drive.Files.Create(&drive.File{
+func (g *googleDriveStore) Store(ctx context.Context, name string, data io.Reader) (string, error) {
+	f, err := g.drive.Files.Create(&drive.File{
 		Name:    name,
 		Parents: []string{g.folderId},
 	}).Media(data).Do()
-	return err
+	return f.Id, err
 }
 
 func NewGoogleDriveStorage(config *oauth2.Config, token *oauth2.Token, folderId string) (Storage, error) {

@@ -96,7 +96,7 @@ func TestThumbnailer(t *testing.T) {
 	// store thumbnail
 	mstorage.EXPECT().
 		Store(mock.Anything, "thumb_file.jpg", mockThumbnailData).
-		Return(nil)
+		Return("abc", nil)
 
 	// act
 	msg := &eventsv1.NewMedia{FileId: "abc", EventId: uint64(1), Type: eventsv1.NewMedia_IMAGE}

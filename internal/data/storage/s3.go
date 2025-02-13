@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 
+	"github.com/google/uuid"
 	"github.com/rhnvrm/simples3"
 )
 
@@ -27,19 +28,20 @@ func (s *s3Store) Get(ctx context.Context, name string) (io.ReadCloser, error) {
 	return file, nil
 }
 
-func (s *s3Store) Store(ctx context.Context, name string, file io.Reader) error {
+func (s *s3Store) Store(ctx context.Context, name string, file io.Reader) (string, error) {
 	data, err := io.ReadAll(file)
 	if err != nil {
-		return err
+		return "", err
 	}
+	id := uuid.NewString()
 	_, err = s.s3.FileUpload(simples3.UploadInput{
 		Bucket:      s.bucket,
-		ObjectKey:   name,
+		ObjectKey:   id,
 		ContentType: "text/plain",
 		FileName:    name,
 		Body:        bytes.NewReader(data),
 	})
-	return err
+	return id, err
 }
 
 type S3Config struct {

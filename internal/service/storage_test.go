@@ -28,13 +28,14 @@ func TestStorageService(t *testing.T) {
 		t.Parallel()
 		is := require.New(t)
 
-		filename := t.Name()
+		filename := "file.txt"
 
 		mdb.EXPECT().
-			GetFileInfo(ctx, filename).
+			GetFileInfo(ctx, t.Name()).
 			Return(&db.FileInfo{
 				EventID: 1,
-				Name:    t.Name(),
+				Name:    filename,
+				ID:      t.Name(),
 			}, nil)
 
 		mdb.EXPECT().
@@ -44,10 +45,10 @@ func TestStorageService(t *testing.T) {
 			}, nil)
 
 		mstorage.EXPECT().
-			Get(ctx, filename).
+			Get(ctx, t.Name()).
 			Return(io.NopCloser(bytes.NewReader([]byte("data"))), nil)
 
-		gotName, gotData, err := svc.GetPicture(ctx, filename)
+		gotName, gotData, err := svc.GetPicture(ctx, t.Name())
 
 		is.NoError(err)
 		is.Equal(filename, gotName)
@@ -58,13 +59,11 @@ func TestStorageService(t *testing.T) {
 		t.Parallel()
 		is := require.New(t)
 
-		filename := t.Name()
-
 		mdb.EXPECT().
-			GetFileInfo(ctx, filename).
+			GetFileInfo(ctx, t.Name()).
 			Return(nil, errors.New("boom"))
 
-		gotName, gotData, err := svc.GetPicture(ctx, filename)
+		gotName, gotData, err := svc.GetPicture(ctx, t.Name())
 
 		is.Error(err)
 		is.Equal("", gotName)
@@ -75,13 +74,14 @@ func TestStorageService(t *testing.T) {
 		t.Parallel()
 		is := require.New(t)
 
-		filename := t.Name()
+		filename := "file.txt"
 
 		mdb.EXPECT().
-			GetThumbnailInfo(ctx, filename).
+			GetThumbnailInfo(ctx, t.Name()).
 			Return(&db.ThumbnailInfo{
 				EventID: 1,
-				Name:    t.Name(),
+				Name:    filename,
+				ID:      t.Name(),
 			}, nil)
 
 		mdb.EXPECT().
@@ -91,10 +91,10 @@ func TestStorageService(t *testing.T) {
 			}, nil)
 
 		mstorage.EXPECT().
-			Get(ctx, filename).
+			Get(ctx, t.Name()).
 			Return(io.NopCloser(bytes.NewReader([]byte("data"))), nil)
 
-		gotName, gotData, err := svc.GetThumbnail(ctx, filename)
+		gotName, gotData, err := svc.GetThumbnail(ctx, t.Name())
 
 		is.NoError(err)
 		is.Equal(filename, gotName)

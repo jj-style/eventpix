@@ -33,13 +33,13 @@ func (f *filesystem) Get(_ context.Context, name string) (io.ReadCloser, error) 
 	return file, nil
 }
 
-func (f *filesystem) Store(_ context.Context, name string, file io.Reader) error {
+func (f *filesystem) Store(_ context.Context, name string, file io.Reader) (string, error) {
 	buf, err := io.ReadAll(file)
 	if err != nil {
-		return err
+		return "", err
 	}
 	if err := afero.WriteFile(f.fs, name, buf, fs.ModePerm); err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return name, nil
 }

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	eventsv1 "github.com/jj-style/eventpix/internal/gen/events/v1"
@@ -96,13 +95,18 @@ func (t *Thumbnailer) Thumb(ctx context.Context, msg *nats.Msg) error {
 	}
 	defer thumbnail.Close()
 
-	tid := uuid.NewString()
 	tname := "thumb_" + fi.Name
 	if fi.Video {
 		tname = "thumb_" + strings.TrimRight(fi.Name, filepath.Ext(fi.Name)) + ".png"
 	}
+
+	id, err := evt.Storage.Store(ctx, tname, thumbnail)
+	if err != nil {
+		t.log.Errorf("storing thumbnail: %v", err)
+		return err
+	}
 	if err := t.db.AddThumbnailInfo(ctx, &db.ThumbnailInfo{
-		ID:         tid,
+		ID:         id,
 		Name:       tname,
 		EventID:    uint(req.GetEventId()),
 		FileInfoID: fi.ID,
@@ -111,12 +115,7 @@ func (t *Thumbnailer) Thumb(ctx context.Context, msg *nats.Msg) error {
 		return err
 	}
 
-	if err := evt.Storage.Store(ctx, tname, thumbnail); err != nil {
-		t.log.Errorf("storing thumbnail: %v", err)
-		return err
-	}
-
-	if err := t.nc.Publish("new-thumbnail", []byte(tid)); err != nil {
+	if err := t.nc.Publish("new-thumbnail", []byte(id)); err != nil {
 		t.log.Errorf("sending new thumbnail message: %v", err)
 		return err
 	}

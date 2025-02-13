@@ -40,7 +40,7 @@ func (s *storageService) GetThumbnail(ctx context.Context, id string) (string, [
 		return "", nil, err
 	}
 
-	data, err := evt.Storage.Get(ctx, ti.Name)
+	data, err := evt.Storage.Get(ctx, ti.ID)
 	if err != nil {
 		s.log.Sugar().Errorf("getting thumbnail data for %s: %v", id, err)
 		return "", nil, err
@@ -70,7 +70,7 @@ func (s *storageService) GetPicture(ctx context.Context, id string) (string, []b
 		return "", nil, err
 	}
 
-	data, err := evt.Storage.Get(ctx, fi.Name)
+	data, err := evt.Storage.Get(ctx, fi.ID)
 	if err != nil {
 		s.log.Sugar().Errorf("getting file data for %s: %v", id, err)
 		return "", nil, err

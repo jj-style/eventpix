@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/google/uuid"
 	"github.com/jj-style/eventpix/internal/data/db"
 	eventsv1 "github.com/jj-style/eventpix/internal/gen/events/v1"
 	picturev1 "github.com/jj-style/eventpix/internal/gen/picture/v1"
@@ -132,8 +131,6 @@ func (p *eventpixSvc) GetThumbnailInfo(ctx context.Context, id string) (*picture
 }
 
 func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename string, src io.Reader, contentType string) error {
-	id := uuid.NewString()
-
 	var mt eventsv1.NewMedia_MediaType
 	switch contentType {
 	case "image/png", "image/jpeg":
@@ -154,7 +151,8 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 		return errors.New("event is not live")
 	}
 
-	if err = evt.Storage.Store(ctx, filename, src); err != nil {
+	id, err := evt.Storage.Store(ctx, filename, src)
+	if err != nil {
 		p.logger.Errorf("error storing image: %w", err)
 		return err
 	}

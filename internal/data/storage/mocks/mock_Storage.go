@@ -82,21 +82,31 @@ func (_c *MockStorage_Get_Call) RunAndReturn(run func(context.Context, string) (
 }
 
 // Store provides a mock function with given fields: _a0, _a1, _a2
-func (_m *MockStorage) Store(_a0 context.Context, _a1 string, _a2 io.Reader) error {
+func (_m *MockStorage) Store(_a0 context.Context, _a1 string, _a2 io.Reader) (string, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Store")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, io.Reader) error); ok {
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, io.Reader) (string, error)); ok {
+		return rf(_a0, _a1, _a2)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, io.Reader) string); ok {
 		r0 = rf(_a0, _a1, _a2)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, string, io.Reader) error); ok {
+		r1 = rf(_a0, _a1, _a2)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // MockStorage_Store_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Store'
@@ -119,12 +129,12 @@ func (_c *MockStorage_Store_Call) Run(run func(_a0 context.Context, _a1 string, 
 	return _c
 }
 
-func (_c *MockStorage_Store_Call) Return(_a0 error) *MockStorage_Store_Call {
-	_c.Call.Return(_a0)
+func (_c *MockStorage_Store_Call) Return(_a0 string, _a1 error) *MockStorage_Store_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *MockStorage_Store_Call) RunAndReturn(run func(context.Context, string, io.Reader) error) *MockStorage_Store_Call {
+func (_c *MockStorage_Store_Call) RunAndReturn(run func(context.Context, string, io.Reader) (string, error)) *MockStorage_Store_Call {
 	_c.Call.Return(run)
 	return _c
 }

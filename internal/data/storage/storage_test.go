@@ -26,8 +26,8 @@ func TestStorage(t *testing.T) {
 		"s3": storage.NewS3Store(&storage.S3Config{
 			Endpoint:  "http://127.0.0.1:9000",
 			Region:    "us-east-1",
-			AccessKey: "AAA",
-			SecretKey: "BBB",
+			AccessKey: "aaaaaaaa",
+			SecretKey: "bbbbbbbb",
 			Bucket:    "test",
 		}),
 	}
@@ -38,11 +38,12 @@ func TestStorage(t *testing.T) {
 
 			// store some data
 			data := bytes.NewReader([]byte("data"))
-			err := store.Store(ctx, t.Name(), data)
+			id, err := store.Store(ctx, t.Name(), data)
 			require.NoError(t, err)
+			require.NotEmpty(t, id)
 
 			// read it back out
-			got, err := store.Get(ctx, t.Name())
+			got, err := store.Get(ctx, id)
 			require.NoError(t, err)
 			gotData, _ := io.ReadAll(got)
 			require.Equal(t, []byte("data"), gotData)
@@ -61,8 +62,9 @@ func TestStorage(t *testing.T) {
 			t.Parallel()
 			// store some data
 			data := &errReader{}
-			err := store.Store(ctx, t.Name(), data)
+			id, err := store.Store(ctx, t.Name(), data)
 			require.Error(t, err)
+			require.Empty(t, id)
 		})
 	}
 }

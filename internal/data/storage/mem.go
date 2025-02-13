@@ -22,15 +22,15 @@ func (m *memStore) Get(_ context.Context, name string) (io.ReadCloser, error) {
 	}
 }
 
-func (m *memStore) Store(_ context.Context, name string, data io.Reader) error {
+func (m *memStore) Store(_ context.Context, name string, data io.Reader) (string, error) {
 	m.Lock()
 	defer m.Unlock()
 	buf, err := io.ReadAll(data)
 	if err != nil {
-		return err
+		return "", err
 	}
 	m.files[name] = buf
-	return nil
+	return name, nil
 }
 
 func NewMemStore() Storage {
