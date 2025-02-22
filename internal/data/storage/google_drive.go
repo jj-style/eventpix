@@ -16,6 +16,9 @@ type googleDriveStore struct {
 
 func (g *googleDriveStore) Get(ctx context.Context, id string) (io.ReadCloser, error) {
 	resp, err := g.drive.Files.Get(id).Download()
+	if err != nil {
+		return nil, err
+	}
 	return resp.Body, err
 }
 
@@ -24,6 +27,9 @@ func (g *googleDriveStore) Store(ctx context.Context, name string, data io.Reade
 		Name:    name,
 		Parents: []string{g.folderId},
 	}).Media(data).Do()
+	if err != nil {
+		return "", err
+	}
 	return f.Id, err
 }
 
