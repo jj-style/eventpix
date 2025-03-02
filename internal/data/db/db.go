@@ -22,6 +22,7 @@ type DB interface {
 	CreateEvent(context.Context, *Event) (uint, error)
 	GetEvents(context.Context, uint) ([]*Event, error)
 	GetEvent(context.Context, uint64) (*Event, error)
+	GetEventBySlug(context.Context, string) (*Event, error)
 	AddFileInfo(context.Context, *FileInfo) error
 	GetFileInfo(context.Context, string) (*FileInfo, error)
 	AddThumbnailInfo(context.Context, *ThumbnailInfo) error
@@ -142,6 +143,30 @@ func (d *dbImpl) GetEvent(ctx context.Context, id uint64) (*Event, error) {
 
 	if err := ExtractEventStorage(&event, d.googleOauthConfig); err != nil {
 		d.log.Errorf("extracting event(%d) storage: %v", id, err)
+		return nil, err
+	}
+
+	return &event, nil
+}
+
+func (d *dbImpl) GetEventBySlug(ctx context.Context, slug string) (*Event, error) {
+	var event Event
+	result := d.db.WithContext(ctx).
+		Preload(clause.Associations).
+		Preload("User.GoogleDriveToken").
+		First(&event, "slug = ?", slug)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			d.log.Errorf("event with slug(%s) not found in db", slug)
+			return nil, result.Error
+		} else {
+			d.log.Errorf("getting event with slug(%s) from db: %v", slug, result.Error)
+			return nil, result.Error
+		}
+	}
+
+	if err := ExtractEventStorage(&event, d.googleOauthConfig); err != nil {
+		d.log.Errorf("extracting event with slug(%s) storage: %v", slug, err)
 		return nil, err
 	}
 

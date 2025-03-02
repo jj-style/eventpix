@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
+	"github.com/jj-style/eventpix/internal/pkg/validate"
 	"github.com/jj-style/eventpix/internal/server/middleware"
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
@@ -33,6 +34,7 @@ func NewHttpServer(
 	nc *nats.Conn,
 	logger *zap.Logger,
 	googleOauthConfig *oauth2.Config,
+	validator validate.Validator,
 ) *http.Server {
 
 	r := gin.New()
@@ -56,7 +58,7 @@ func NewHttpServer(
 	r.StaticFS("/static", static.EmbedFolder(staticFs, "assets/static"))
 
 	// htmx ui / api
-	handleUi(r, htmx, db, eventpixSvc, nc, cfg)
+	handleUi(r, htmx, db, eventpixSvc, nc, cfg, validator)
 
 	storageGroup := r.Group("/storage")
 	handleStorage(storageGroup, storageService)

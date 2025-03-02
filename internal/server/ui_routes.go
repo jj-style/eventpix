@@ -24,6 +24,7 @@ import (
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	picturev1 "github.com/jj-style/eventpix/internal/gen/picture/v1"
+	"github.com/jj-style/eventpix/internal/pkg/validate"
 	"github.com/jj-style/eventpix/internal/server/middleware"
 	"github.com/jj-style/eventpix/internal/server/sse"
 	templatedata "github.com/jj-style/eventpix/internal/server/template_data"
@@ -55,7 +56,7 @@ func createRenderer() multitemplate.Renderer {
 
 	r.AddFromFS("listEvents", content, base, "assets/templates/eventRow.html", "assets/templates/events.html")
 	r.AddFromFS("eventRow", content, "assets/templates/eventRow.html")
-	r.AddFromFS("createEvent", content, base, "assets/templates/createEventForm.html")
+	r.AddFromFS("createEvent", content, base, "assets/templates/partials/createEventSlug.html", "assets/templates/createEventForm.html")
 	r.AddFromFS("filesystem", content, "assets/templates/forms/filesystem.html")
 	r.AddFromFS("s3", content, "assets/templates/forms/s3.html")
 	r.AddFromFS("google", content, "assets/templates/forms/google.html")
@@ -65,10 +66,11 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFS("profile", content, base, "assets/templates/profile.html")
 
 	r.AddFromFS("qrModal", content, "assets/templates/components/qrModal.html")
+	r.AddFromFS("createEventSlug", content, "assets/templates/partials/createEventSlug.html")
 	return r
 }
 
-func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixService, nc *nats.Conn, cfg *config.Config) {
+func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixService, nc *nats.Conn, cfg *config.Config, validator validate.Validator) {
 	r.HTMLRender = createRenderer()
 
 	errorTmpl := template.Must(template.ParseFS(content, "assets/templates/errorToast.html"))
@@ -109,6 +111,7 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hr.GET("/event/:id", getEvent(svc))
 	hr.GET("/thumbnails/:id", getThumbnails(svc))
 	hr.POST("/contact", postContactForm(&http.Client{}, cfg.Server.FormbeeKey))
+	hr.POST("/validate/createEvent/slug", postValidateCreateEventSlug(validator))
 
 	// SSE handler and goroutine to listen for new thumbnails and send new data
 	hr.GET("/sse", broker.ServeHTTP)
@@ -315,7 +318,7 @@ func postContactForm(client *http.Client, apiKey string) gin.HandlerFunc {
 func getEventQrModal(svc service.EventpixService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		eventId := c.MustGet("eventId").(uint64)
-		event, err := svc.GetEvent(c, &picturev1.GetEventRequest{Id: eventId})
+		event, err := svc.GetEvent(c, &picturev1.GetEventRequest{Value: &picturev1.GetEventRequest_Id{Id: eventId}})
 		if err != nil {
 			AbortWithError(c, http.StatusInternalServerError, err)
 			return
@@ -560,17 +563,40 @@ func getEvents(svc service.EventpixService) gin.HandlerFunc {
 
 func getEvent(svc service.EventpixService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		request := &picturev1.GetEventRequest{}
 		pEventId := c.Param("id")
 		eventId, err := strconv.ParseUint(pEventId, 10, 64)
 		if err != nil {
-			c.AbortWithError(http.StatusBadRequest, err)
-			return
+			// if not an integer, assume it's a slug and try get from that
+			request.Value = &picturev1.GetEventRequest_Slug{Slug: pEventId}
+		} else {
+			request.Value = &picturev1.GetEventRequest_Id{Id: eventId}
 		}
-		event, err := svc.GetEvent(c, &picturev1.GetEventRequest{Id: eventId})
+		event, err := svc.GetEvent(c, request)
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return
 		}
 		c.HTML(http.StatusOK, "eventGallery", gin.H{"title": event.Event.Name, "event": event.Event})
+	}
+}
+
+func postValidateCreateEventSlug(validator validate.Validator) gin.HandlerFunc {
+	type request struct {
+		Slug string `json:"slug"`
+	}
+	return func(c *gin.Context) {
+		var req request
+		if err := c.ShouldBindBodyWithJSON(&req); err != nil {
+			AbortWithError(c, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		class := "valid"
+		err := validator.ValidateSlug(req.Slug)
+		if err != nil {
+			class = "error"
+		}
+		c.HTML(http.StatusOK, "createEventSlug", gin.H{"slug": req.Slug, "error": err, "class": class})
 	}
 }

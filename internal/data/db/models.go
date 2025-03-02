@@ -9,6 +9,7 @@ import (
 type Event struct {
 	gorm.Model
 	Name           string
+	Slug           string `gorm:"uniqueIndex"`
 	Live           bool
 	FileInfos      []FileInfo
 	ThumbnailInfos []ThumbnailInfo

@@ -10,6 +10,7 @@ import (
 	"github.com/jj-style/eventpix/internal/data/db"
 	eventsv1 "github.com/jj-style/eventpix/internal/gen/events/v1"
 	picturev1 "github.com/jj-style/eventpix/internal/gen/picture/v1"
+	"github.com/jj-style/eventpix/internal/pkg/validate"
 	"github.com/jj-style/eventpix/internal/service/prodto"
 	"github.com/nats-io/nats.go"
 	"github.com/samber/lo"
@@ -29,18 +30,20 @@ type EventpixService interface {
 }
 
 type eventpixSvc struct {
-	logger *zap.SugaredLogger
-	db     db.DB
-	nc     *nats.Conn
+	logger    *zap.SugaredLogger
+	db        db.DB
+	nc        *nats.Conn
+	validator validate.Validator
 }
 
-func NewEventpixService(logger *zap.Logger, db db.DB, nc *nats.Conn) EventpixService {
-	return &eventpixSvc{logger: logger.Sugar(), db: db, nc: nc}
+func NewEventpixService(logger *zap.Logger, db db.DB, nc *nats.Conn, validator validate.Validator) EventpixService {
+	return &eventpixSvc{logger: logger.Sugar(), db: db, nc: nc, validator: validator}
 }
 
 func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picturev1.CreateEventRequest) (*picturev1.CreateEventResponse, error) {
 	createEvent := &db.Event{
 		Name:   req.GetName(),
+		Slug:   req.GetSlug(),
 		Live:   req.GetLive(),
 		UserID: userId,
 	}
@@ -65,6 +68,10 @@ func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picture
 		return nil, errors.New("unsupported storage type")
 	}
 
+	if err := p.validator.ValidateEvent(createEvent); err != nil {
+		return nil, err
+	}
+
 	p.logger.Infof("creating event: %+v\n", createEvent)
 	id, err := p.db.CreateEvent(ctx, createEvent)
 	if err != nil {
@@ -86,7 +93,14 @@ func (p *eventpixSvc) DeleteEvent(ctx context.Context, req *picturev1.DeleteEven
 }
 
 func (p *eventpixSvc) GetEvent(ctx context.Context, req *picturev1.GetEventRequest) (*picturev1.GetEventResponse, error) {
-	event, err := p.db.GetEvent(ctx, req.GetId())
+	var event *db.Event
+	var err error
+	switch value := req.Value.(type) {
+	case *picturev1.GetEventRequest_Id:
+		event, err = p.db.GetEvent(ctx, value.Id)
+	case *picturev1.GetEventRequest_Slug:
+		event, err = p.db.GetEventBySlug(ctx, value.Slug)
+	}
 	if err != nil {
 		p.logger.Errorf("getting event %d: %v", req.GetId(), err)
 		return nil, fmt.Errorf("getting event: %v", err)
