@@ -27,17 +27,23 @@
   </div>
 
   <form name="eventForm" id="eventForm" hx-ext='json-enc-custom' hx-post='/event'>
-    <div class="mb-3">
-      <label for="name" class="form-label">Event Name</label>
-      <input
-        type="text"
-        name="name"
-        class="form-control"
-        aria-label="Event Name"
-        placeholder="e.g. My awesome party!"
-        required
-      />
+    <div class="row mb-3">
+      <div class="form-group col-md-6">
+        <label for="name" class="form-label">Event Name</label>
+        <input
+          type="text"
+          name="name"
+          class="form-control"
+          aria-label="Event Name"
+          placeholder="e.g. My awesome party!"
+          required
+        />
+      </div>
+      <div class="form-group col-md-6">
+        {{ template "createEventSlug.html" }}
+      </div>
     </div>
+
     <div class="mb-3">
       <div class="form-check">
         <input

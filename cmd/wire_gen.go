@@ -10,6 +10,7 @@ import (
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	"github.com/jj-style/eventpix/internal/pkg/imagor"
+	"github.com/jj-style/eventpix/internal/pkg/validate"
 	"github.com/jj-style/eventpix/internal/server"
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
@@ -38,8 +39,9 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func
 	}
 	storageService := service.NewStorageService(dbDB, logger)
 	authService := service.NewAuthService(cfg2, dbDB, htmx)
-	eventpixService := service.NewEventpixService(logger, dbDB, conn)
-	httpServer := server.NewHttpServer(cfg2, htmx, storageService, authService, eventpixService, dbDB, conn, logger, oauth2Config)
+	validator := validate.NewValidator()
+	eventpixService := service.NewEventpixService(logger, dbDB, conn, validator)
+	httpServer := server.NewHttpServer(cfg2, htmx, storageService, authService, eventpixService, dbDB, conn, logger, oauth2Config, validator)
 	cmdServerApp, cleanup3, err := newServerApp(cfg2, logger, conn, httpServer)
 	if err != nil {
 		cleanup2()

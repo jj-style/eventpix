@@ -10,6 +10,7 @@ import (
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	"github.com/jj-style/eventpix/internal/pkg/imagor"
+	"github.com/jj-style/eventpix/internal/pkg/validate"
 	"github.com/jj-style/eventpix/internal/server"
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
@@ -17,7 +18,7 @@ import (
 )
 
 func initializeServer(cfg *config.Config, logger *zap.Logger) (*serverApp, func(), error) {
-	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newHtmx, db.NewDb, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
+	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newHtmx, db.NewDb, validate.NewValidator, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
 }
 
 func initializeThumbnailer(cfg *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
