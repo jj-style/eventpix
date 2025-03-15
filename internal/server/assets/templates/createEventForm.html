@@ -63,5 +63,21 @@
 </div>
 {{end}}
 {{ define "scripts" }}
+<script>
+var driveElement = null;
+window.addEventListener("load", function () {
+  document.body.addEventListener('drivePicker', function (e) {
+      if (driveElement !== null) driveElement.removeEventListener("picker:picked", console.log)
+      console.log("drive picker event");
+      driveElement = document.querySelector("drive-picker");
+      driveElement.addEventListener("picker:picked", function(result) {
+        console.log(result);
+        let folderIdInput = document.getElementById('googleDriveFolderId');
+        folderIdInput.value = result.detail.docs[0].id;
+      });
+  })
+});
+</script>
 <script src="/static/scripts/json-enc-custom.js"></script>
+<script src="/static/scripts/drive-picker-element/index.iife.min.js"></script>
 {{ end }}

@@ -101,6 +101,7 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hra.GET("/event/:id/qr", userEventMiddleware, getQrCode(cfg))
 	hra.GET("/profile", getProfile(cfg.OauthSecrets))
 	hra.GET("/storageForm", getStorageForm())
+	hra.GET("/googleDrivePicker", getDrivePicker(cfg.OauthSecrets))
 
 	hra.DELETE("/event/:id", userEventMiddleware, deleteEvent(svc))
 	hra.POST("/event/:id/live", userEventMiddleware, setEventLive(svc))
@@ -598,5 +599,27 @@ func postValidateCreateEventSlug(validator validate.Validator) gin.HandlerFunc {
 			class = "error"
 		}
 		c.HTML(http.StatusOK, "createEventSlug", gin.H{"slug": req.Slug, "error": err, "class": class})
+	}
+}
+
+func getDrivePicker(cfg *config.OauthSecrets) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		h := c.MustGet(middleware.HtmxKey).(*htmx.Handler)
+		user := c.MustGet(gin.AuthUserKey).(*db.User)
+		var googleToken oauth2.Token
+		if user.GoogleDriveToken != nil {
+			err := json.Unmarshal(user.GoogleDriveToken.Token, &googleToken)
+			if err != nil {
+				AbortWithError(c, http.StatusInternalServerError, err)
+				return
+			}
+		}
+		h.TriggerAfterSettle("drivePicker")
+		// TODO(JJ) - make this a template?
+		c.String(http.StatusOK, `
+			<drive-picker app-id="%s" oauth-token="%s" max-items=1>
+				<drive-picker-docs-view include-folders=true select-folder-enabled=true mime-types="application/vnd.google-apps.folder"/>
+			</drive-picker>`,
+			cfg.Google.AppId, googleToken.AccessToken)
 	}
 }
