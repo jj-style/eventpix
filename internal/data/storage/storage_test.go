@@ -5,11 +5,16 @@ import (
 	"context"
 	"errors"
 	"io"
+	"log"
 	"testing"
 
 	"github.com/jj-style/eventpix/internal/data/storage"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
+	"github.com/testcontainers/testcontainers-go"
+	miniotc "github.com/testcontainers/testcontainers-go/modules/minio"
 )
 
 // a base test suite for storage implementations
@@ -19,15 +24,20 @@ func TestStorage(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
+	s3Conn, s3Username, s3Password, err := createMinioWithBucket(ctx, t)
+	if err != nil {
+		t.Fatalf("setting up s3: %v", err)
+		return
+	}
+
 	stores := map[string]storage.Storage{
 		"memory":     storage.NewMemStore(),
 		"filesystem": storage.NewFilesystem(afero.NewMemMapFs(), "/store"),
-		// TODO((jj): make this a testcontainer spun up to derive access key/secret key
 		"s3": storage.NewS3Store(&storage.S3Config{
-			Endpoint:  "http://127.0.0.1:9000",
+			Endpoint:  s3Conn,
 			Region:    "us-east-1",
-			AccessKey: "aaaaaaaa",
-			SecretKey: "bbbbbbbb",
+			AccessKey: s3Username,
+			SecretKey: s3Password,
 			Bucket:    "test",
 		}),
 	}
@@ -73,4 +83,38 @@ type errReader struct{}
 
 func (x *errReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("boom")
+}
+
+func createMinioWithBucket(ctx context.Context, t *testing.T) (string, string, string, error) {
+	t.Helper()
+
+	minioContainer, err := miniotc.Run(ctx, "minio/minio:RELEASE.2024-01-16T16-07-38Z")
+	t.Cleanup(func() {
+		if err := testcontainers.TerminateContainer(minioContainer); err != nil {
+			log.Printf("failed to terminate container: %s", err)
+		}
+	})
+	if err != nil {
+		return "", "", "", err
+	}
+
+	s3Conn, err := minioContainer.ConnectionString(ctx)
+	if err != nil {
+		t.Fatalf("failed to get s3 connection string: %s", err)
+		return "", "", "", err
+	}
+
+	minioClient, err := minio.New(s3Conn, &minio.Options{
+		Creds:  credentials.NewStaticV4(minioContainer.Username, minioContainer.Password, ""),
+		Secure: false,
+	})
+	if err != nil {
+		return "", "", "", err
+	}
+	if err := minioClient.MakeBucket(ctx, "test", minio.MakeBucketOptions{Region: "us-east-1"}); err != nil {
+		t.Fatalf("creating minio bucket: %v", err)
+		return "", "", "", err
+	}
+
+	return "http://" + s3Conn, minioContainer.Username, minioContainer.Password, nil
 }
