@@ -20,8 +20,9 @@ type Server struct {
 }
 
 type Database struct {
-	Driver string `mapstructure:"driver"`
-	Uri    string `mapstructure:"uri"`
+	Driver        string `mapstructure:"driver"`
+	Uri           string `mapstructure:"uri"`
+	EncryptionKey string `mapstructure:"encryptionKey"`
 }
 
 type Nats struct {

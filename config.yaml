@@ -1,7 +1,7 @@
 server:
   address: 0.0.0.0:8080
   environment: development
-  serverUrl: http://192.168.1.126:8080
+  serverUrl: http://localhost:8080
   secretKey: CHANGEME
   formbeeKey: APIKEY
 oauth:
@@ -12,6 +12,7 @@ oauth:
 database:
   driver: sqlite
   uri: ./scratch/test.db
+  encryptionKey: A/vDd4Jk3fF8dgrjhkVf2qA950jSFw+wwzAqsWEHQqo=
   # uri: file::memory:?cache=shared
 nats:
   inProcess: true

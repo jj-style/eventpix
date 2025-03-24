@@ -1,6 +1,7 @@
 package db
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 
@@ -19,14 +20,15 @@ func ExtractEventStorage(evt *Event, googleOauthConfig *oauth2.Config) error {
 	} else if st := evt.S3Storage; st != nil {
 		evt.Storage = storage.NewS3Store(&storage.S3Config{
 			Region:    st.Region,
-			AccessKey: st.AccessKey,
-			SecretKey: st.SecretKey,
+			AccessKey: st.AccessKey.Raw.(string),
+			SecretKey: st.SecretKey.Raw.(string),
 			Bucket:    st.Bucket,
 			Endpoint:  st.Endpoint,
 		})
 	} else if st := evt.GoogleDriveStorage; st != nil {
 		var token oauth2.Token
-		json.Unmarshal(evt.User.GoogleDriveToken.Token, &token)
+		googleTokenRaw, _ := base64.StdEncoding.DecodeString(evt.User.GoogleDriveToken.Token.Raw.(string))
+		json.Unmarshal(googleTokenRaw, &token)
 		gdrive, err := storage.NewGoogleDriveStorage(googleOauthConfig, &token, st.DirectoryID)
 		if err != nil {
 			return err

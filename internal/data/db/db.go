@@ -3,11 +3,15 @@ package db
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/pkg/utils/auth"
+	gormcrypto "github.com/pkasila/gorm-crypto"
+	"github.com/pkasila/gorm-crypto/algorithms"
+	"github.com/pkasila/gorm-crypto/serialization"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
@@ -59,6 +63,17 @@ func NewDb(cfg *config.Database, logger *zap.Logger, googleOauthConfig *oauth2.C
 	if err != nil {
 		return nil, func() {}, fmt.Errorf("opening database: %w", err)
 	}
+
+	encryptionKey, err := base64.StdEncoding.DecodeString(cfg.EncryptionKey)
+	if err != nil {
+		return nil, func() {}, err
+	}
+
+	aes, err := algorithms.NewAES256CBC(encryptionKey)
+	if err != nil {
+		return nil, func() {}, err
+	}
+	gormcrypto.Init(aes, serialization.NewJSON())
 
 	// Migrate the schema
 	if err := db.AutoMigrate(
@@ -284,7 +299,7 @@ func (d *dbImpl) UserAuthorizedForEvent(ctx context.Context, userId, eventId uin
 
 func (d *dbImpl) StoreGoogleToken(ctx context.Context, userId uint, token []byte) error {
 	return d.db.WithContext(ctx).
-		Create(&GoogleDriveToken{Token: token, UserID: userId}).Error
+		Create(&GoogleDriveToken{Token: gormcrypto.EncryptedValue{Raw: token}, UserID: userId}).Error
 }
 
 func (d *dbImpl) GetGoogleToken(ctx context.Context, userId uint) ([]byte, error) {
@@ -295,7 +310,7 @@ func (d *dbImpl) GetGoogleToken(ctx context.Context, userId uint) ([]byte, error
 	if err := result.Error; err != nil {
 		return nil, err
 	}
-	return goog.Token, nil
+	return goog.Token.Raw.([]byte), nil
 }
 
 func (d *dbImpl) DeleteGoogleToken(ctx context.Context, userId uint) error {

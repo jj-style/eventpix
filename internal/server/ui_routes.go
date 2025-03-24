@@ -417,7 +417,8 @@ func getProfile(oauthCfg *config.OauthSecrets) gin.HandlerFunc {
 		user := c.MustGet(gin.AuthUserKey).(*db.User)
 		var googleToken oauth2.Token
 		if user.GoogleDriveToken != nil {
-			err := json.Unmarshal(user.GoogleDriveToken.Token, &googleToken)
+			googleTokenRaw, _ := base64.StdEncoding.DecodeString(user.GoogleDriveToken.Token.Raw.(string))
+			err := json.Unmarshal(googleTokenRaw, &googleToken)
 			if err != nil {
 				AbortWithError(c, http.StatusInternalServerError, err)
 				return
@@ -608,8 +609,12 @@ func getDrivePicker(cfg *config.OauthSecrets) gin.HandlerFunc {
 		user := c.MustGet(gin.AuthUserKey).(*db.User)
 		var googleToken oauth2.Token
 		if user.GoogleDriveToken != nil {
-			err := json.Unmarshal(user.GoogleDriveToken.Token, &googleToken)
+			gdt, err := base64.StdEncoding.DecodeString(user.GoogleDriveToken.Token.Raw.(string))
 			if err != nil {
+				AbortWithError(c, http.StatusInternalServerError, err)
+				return
+			}
+			if err := json.Unmarshal(gdt, &googleToken); err != nil {
 				AbortWithError(c, http.StatusInternalServerError, err)
 				return
 			}

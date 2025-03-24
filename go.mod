@@ -18,6 +18,7 @@ require (
 	github.com/moznion/gonstructor v0.5.1
 	github.com/nats-io/nats-server/v2 v2.10.22
 	github.com/nats-io/nats.go v1.37.0
+	github.com/pkasila/gorm-crypto v1.0.3
 	github.com/rhnvrm/simples3 v0.8.4
 	github.com/samber/lo v1.47.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e

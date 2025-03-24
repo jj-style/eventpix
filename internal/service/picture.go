@@ -13,6 +13,7 @@ import (
 	"github.com/jj-style/eventpix/internal/pkg/validate"
 	"github.com/jj-style/eventpix/internal/service/prodto"
 	"github.com/nats-io/nats.go"
+	gormcrypto "github.com/pkasila/gorm-crypto"
 	"github.com/samber/lo"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -55,8 +56,8 @@ func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picture
 	case *picturev1.CreateEventRequest_S3:
 		createEvent.S3Storage = &db.S3Storage{
 			Bucket:    st.S3.GetBucket(),
-			AccessKey: st.S3.GetAccessKey(),
-			SecretKey: st.S3.GetSecretKey(),
+			AccessKey: gormcrypto.EncryptedValue{Raw: st.S3.GetAccessKey()},
+			SecretKey: gormcrypto.EncryptedValue{Raw: st.S3.GetSecretKey()},
 			Region:    st.S3.GetRegion(),
 			Endpoint:  st.S3.GetEndpoint(),
 		}

@@ -3,6 +3,7 @@ package db
 
 import (
 	"github.com/jj-style/eventpix/internal/data/storage"
+	gormcrypto "github.com/pkasila/gorm-crypto"
 	"gorm.io/gorm"
 )
 
@@ -61,9 +62,8 @@ type FileSystemStorage struct {
 type S3Storage struct {
 	gorm.Model
 	Region    string
-	AccessKey string
-	// TODO(jj): encrypt at rest
-	SecretKey string
+	AccessKey gormcrypto.EncryptedValue
+	SecretKey gormcrypto.EncryptedValue
 	Bucket    string
 	Endpoint  string
 	EventID   uint
@@ -77,7 +77,6 @@ type GoogleDriveStorage struct {
 
 type GoogleDriveToken struct {
 	gorm.Model
-	// TODO(jj): encrypt at rest
-	Token  []byte
+	Token  gormcrypto.EncryptedValue
 	UserID uint
 }
