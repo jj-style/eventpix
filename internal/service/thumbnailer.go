@@ -95,10 +95,7 @@ func (t *Thumbnailer) Thumb(ctx context.Context, msg *nats.Msg) error {
 	}
 	defer thumbnail.Close()
 
-	tname := "thumb_" + fi.Name
-	if fi.Video {
-		tname = "thumb_" + strings.TrimRight(fi.Name, filepath.Ext(fi.Name)) + ".png"
-	}
+	tname := "thumb_" + strings.TrimRight(fi.Name, filepath.Ext(fi.Name)) + ".webp"
 
 	id, err := evt.Storage.Store(ctx, tname, thumbnail)
 	if err != nil {

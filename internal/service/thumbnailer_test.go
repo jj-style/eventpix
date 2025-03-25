@@ -87,7 +87,7 @@ func TestThumbnailer(t *testing.T) {
 	mdb.EXPECT().
 		AddThumbnailInfo(mock.Anything, mock.Anything).
 		RunAndReturn(func(ctx context.Context, ti *db.ThumbnailInfo) error {
-			is.Equal("thumb_file.jpg", ti.Name)
+			is.Equal("thumb_file.webp", ti.Name)
 			is.Equal("abc", ti.FileInfoID) // foreign key link to main file
 			is.Equal(uint(1), ti.EventID)
 			return nil
@@ -95,7 +95,7 @@ func TestThumbnailer(t *testing.T) {
 
 	// store thumbnail
 	mstorage.EXPECT().
-		Store(mock.Anything, "thumb_file.jpg", mockThumbnailData).
+		Store(mock.Anything, "thumb_file.webp", mockThumbnailData).
 		Return("abc", nil)
 
 	// act
