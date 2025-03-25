@@ -147,8 +147,9 @@ func (p *eventpixSvc) GetThumbnailInfo(ctx context.Context, id string) (*picture
 
 func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename string, src io.Reader, contentType string) error {
 	var mt eventsv1.NewMedia_MediaType
+
 	switch contentType {
-	case "image/png", "image/jpeg":
+	case "image/png", "image/jpeg", "image/heif":
 		mt = eventsv1.NewMedia_IMAGE
 	case "video/avi", "video/mp4", "video/mpeg", "video/webm":
 		mt = eventsv1.NewMedia_VIDEO
