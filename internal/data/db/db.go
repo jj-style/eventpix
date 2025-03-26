@@ -21,7 +21,7 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-//go:generate go run github.com/vektra/mockery/v2
+//go:generate go tool mockery
 type DB interface {
 	CreateEvent(context.Context, *Event) (uint, error)
 	GetEvents(context.Context, uint) ([]*Event, error)

@@ -3,6 +3,9 @@ dir: "{{.InterfaceDir}}/mocks"
 mockname: "Mock{{.InterfaceName}}"
 outpkg: "{{.PackageName}}"
 with-expecter: True
+disable-version-string: True
+resolve-type-alias: False
+issue-845-fix: True
 packages:
   github.com/jj-style/eventpix/internal/service:
     interfaces:
