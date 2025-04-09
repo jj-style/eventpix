@@ -1,21 +1,38 @@
 <tr hx-target="this" hx-swap="outerHTML">
-<td><a href="/event/{{.Id}}">{{.Name}}</a></td>
+<td><a href="/event/{{.event.Id}}">{{.event.Name}}</a></td>
 <td>
-    {{ $checked := "" }}{{ if .Live }}{{ $checked = "checked" }}{{ end }}
+    {{ $checked := "" }}{{ if .event.Live }}{{ $checked = "checked" }}{{ end }}
     <input
         hx-ext="json-enc"
-        hx-post="/event/{{.Id}}/live"
+        hx-post="/event/{{.event.Id}}/live"
         hx-vals='{
-        "live": {{ not .Live }}
+        "live": {{ not .event.Live }}
         }'
         type="checkbox"
         {{$checked}}>
 </td>
+{{ if .config.SingleEventMode }}
+<td>
+    {{ if .event.Active }}
+        <button class="btn btn-outline-success" disabled>
+            <i class="bi bi-check-lg"></i>
+        </button>
+    {{ else }}
+        <button
+            class="btn btn-outline-secondary"
+            hx-post="/event/{{.event.Id}}/active"
+            hx-swap="none"
+        >
+        <i class="bi bi-x-lg"></i>
+        </button>
+    {{ end }}
+</td>
+{{ end }}
 <td>
     <button
         class="btn btn-outline-secondary"
         data-bs-toggle="modal" data-bs-target="#qrModal"
-        hx-get="/event/{{.Id}}/qr/modal"
+        hx-get="/event/{{.event.Id}}/qr/modal"
         hx-target="#qrModal"
         hx-swap="innerHTML"
     >
@@ -25,8 +42,8 @@
 <td>
     <button
         class="btn btn-outline-danger"
-        hx-confirm="Are you sure you want to delete the event {{.Name }}. Your pictures will not be deleted."
-        hx-delete="/event/{{.Id}}"
+        hx-confirm="Are you sure you want to delete the event {{.event.Name }}. Your pictures will not be deleted."
+        hx-delete="/event/{{.event.Id}}"
     >
     <i class="bi bi-trash"></i>
     </button>

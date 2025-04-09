@@ -35,6 +35,7 @@ import (
 	"golang.org/x/oauth2"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"gorm.io/gorm"
 )
 
 //go:embed assets/templates/*
@@ -47,14 +48,30 @@ func createRenderer() multitemplate.Renderer {
 			return index+1 == len
 		},
 		"upper": strings.ToUpper,
+		// https://stackoverflow.com/a/18276968
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
 	}
 	base := "assets/templates/base.html"
 
 	r.AddFromFSFuncs("index", fm, content, base, "assets/templates/index.html")
+	r.AddFromFSFuncs("noActiveEvent", fm, content, base, "assets/templates/noActiveEvent.html")
 	r.AddFromFS("eventGallery", content, base, "assets/templates/eventGallery.html")
 	r.AddFromFSFuncs("thumbnails", fm, content, "assets/templates/thumbnails.html")
 
-	r.AddFromFS("listEvents", content, base, "assets/templates/eventRow.html", "assets/templates/events.html")
+	r.AddFromFSFuncs("listEvents", fm, content, base, "assets/templates/eventRow.html", "assets/templates/events.html")
 	r.AddFromFS("eventRow", content, "assets/templates/eventRow.html")
 	r.AddFromFS("createEvent", content, base, "assets/templates/partials/createEventSlug.html", "assets/templates/createEventForm.html")
 	r.AddFromFS("filesystem", content, "assets/templates/forms/filesystem.html")
@@ -83,9 +100,6 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	userEventMiddleware := middleware.UserAuthorizedForEvent(db, "id", "eventId")
 	authRedirectMiddleware := middleware.AuthRedirect(cfg.Server.SecretKey, db, "/events")
 
-	// public static pages
-	r.GET("/", getIndex())
-
 	// htmx middleware to handle errors nicely
 	hr := r.Group("/")
 	hr.Use(htmxMiddleware)
@@ -94,9 +108,17 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hra := r.Group("/")
 	hra.Use(htmxMiddleware, authRequired)
 
+	// public static pages
+	if !cfg.Server.SingleEventMode {
+		r.GET("/", getIndex())
+	} else {
+		hr.GET("/", getActiveEvent(svc))
+		hr.POST("/event/:id/active", setActiveEvent(svc))
+	}
+
 	hra.GET("/event/new", getCreateEvent())
 	hra.POST("/event", createEvent(svc, htmx))
-	hra.GET("/events", getEvents(svc))
+	hra.GET("/events", getEvents(svc, cfg.Server))
 	hra.GET("/event/:id/qr/modal", userEventMiddleware, getEventQrModal(svc))
 	hra.GET("/event/:id/qr", userEventMiddleware, getQrCode(cfg))
 	hra.GET("/profile", getProfile(cfg.OauthSecrets))
@@ -104,11 +126,13 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hra.GET("/googleDrivePicker", getDrivePicker(cfg.OauthSecrets))
 
 	hra.DELETE("/event/:id", userEventMiddleware, deleteEvent(svc))
-	hra.POST("/event/:id/live", userEventMiddleware, setEventLive(svc))
+	hra.POST("/event/:id/live", userEventMiddleware, setEventLive(svc, cfg.Server))
 
 	// public view
 	hr.GET("/login", authRedirectMiddleware, getLoginForm())
-	hr.GET("/register", authRedirectMiddleware, getRegisterForm())
+	if !cfg.Server.SingleEventMode {
+		hr.GET("/register", authRedirectMiddleware, getRegisterForm())
+	}
 	hr.GET("/event/:id", getEvent(svc))
 	hr.GET("/thumbnails/:id", getThumbnails(svc))
 	hr.POST("/contact", postContactForm(&http.Client{}, cfg.Server.FormbeeKey))
@@ -204,7 +228,7 @@ func createEvent(svc service.EventpixService, htmx *htmx.HTMX) gin.HandlerFunc {
 	}
 }
 
-func setEventLive(svc service.EventpixService) gin.HandlerFunc {
+func setEventLive(svc service.EventpixService, cfg *config.Server) gin.HandlerFunc {
 	type tReq struct {
 		Live string `json:"live"`
 	}
@@ -223,7 +247,7 @@ func setEventLive(svc service.EventpixService) gin.HandlerFunc {
 			return
 		}
 
-		c.HTML(200, "eventRow", evt.GetEvent())
+		c.HTML(200, "eventRow", gin.H{"event": evt.GetEvent(), "config": cfg})
 	}
 }
 
@@ -380,6 +404,43 @@ func getQrCode(cfg *config.Config) gin.HandlerFunc {
 	}
 }
 
+func getActiveEvent(svc service.EventpixService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		event, err := svc.GetActiveEvent(c, &picturev1.GetActiveEventRequest{})
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				c.HTML(http.StatusOK, "noActiveEvent", gin.H{})
+				return
+			} else {
+				c.AbortWithError(http.StatusBadRequest, err)
+				return
+			}
+		}
+		c.HTML(http.StatusOK, "eventGallery", gin.H{"title": event.Event.Name, "event": event.Event})
+	}
+}
+
+func setActiveEvent(svc service.EventpixService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		h := c.MustGet(middleware.HtmxKey).(*htmx.Handler)
+		pEventId := c.Param("id")
+		eventId, err := strconv.ParseUint(pEventId, 10, 64)
+		if err != nil {
+			AbortWithError(c, http.StatusUnprocessableEntity, err)
+			return
+		}
+
+		_, err = svc.SetActiveEvent(c, &picturev1.SetActiveEventRequest{Id: eventId})
+		if err != nil {
+			AbortWithError(c, http.StatusBadRequest, err)
+			return
+		}
+		c.Status(http.StatusOK)
+		h.Refresh(true)
+
+	}
+}
+
 // === PAGES ===
 
 func getIndex() gin.HandlerFunc {
@@ -526,7 +587,7 @@ func getCreateEvent() gin.HandlerFunc {
 	}
 }
 
-func getEvents(svc service.EventpixService) gin.HandlerFunc {
+func getEvents(svc service.EventpixService, cfg *config.Server) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user := c.MustGet(gin.AuthUserKey).(*db.User)
 		events, err := svc.GetEvents(c, &picturev1.GetEventsRequest{}, user.ID)
@@ -539,6 +600,7 @@ func getEvents(svc service.EventpixService) gin.HandlerFunc {
 			"title":  "Events",
 			"events": events.GetEvents(),
 			"user":   user,
+			"config": cfg,
 			"nav": gin.H{
 				"dark": true,
 				"items": []gin.H{

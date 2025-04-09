@@ -8,9 +8,10 @@ import (
 
 func Event(e *db.Event, withFileInfos bool) *picturev1.Event {
 	ret := &picturev1.Event{
-		Id:   uint64(e.ID),
-		Name: e.Name,
-		Live: e.Live,
+		Id:     uint64(e.ID),
+		Name:   e.Name,
+		Live:   e.Live,
+		Active: e.Active,
 	}
 	if withFileInfos {
 		ret.FileInfos = &picturev1.FileInfosValue{

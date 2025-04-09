@@ -11,6 +11,8 @@ service PictureService {
     rpc SetEventLive(SetEventLiveRequest) returns (SetEventLiveResponse);
     rpc GetEvents(GetEventsRequest) returns (GetEventsResponse);
     rpc GetEvent(GetEventRequest) returns (GetEventResponse);
+    rpc GetActiveEvent(GetActiveEventRequest) returns (GetEventResponse);
+    rpc SetActiveEvent(SetActiveEventRequest) returns (google.protobuf.Empty);
     rpc DeleteEvent(DeleteEventRequest) returns (google.protobuf.Empty);
     rpc Upload(UploadRequest) returns (UploadResponse);
     rpc GetThumbnails(GetThumbnailsRequest) returns (GetThumbnailsResponse);
@@ -32,6 +34,8 @@ message Event {
         S3 s3 = 6;
         GoogleDrive googleDrive = 7;
     }
+    // Whether the event is active
+    bool active = 8;
 }
 
 // Wrapper around a list of FileInfo
@@ -89,6 +93,15 @@ message GetEventRequest{
         uint64 id = 1;
         string slug = 2;
     }
+}
+
+// Request to get the active event
+message GetActiveEventRequest {}
+
+// Request to set the active event
+message SetActiveEventRequest {
+    // id of event to set as active
+    uint64 id = 1;
 }
 
 message GetEventResponse{

@@ -27,6 +27,8 @@ type DB interface {
 	GetEvents(context.Context, uint) ([]*Event, error)
 	GetEvent(context.Context, uint64) (*Event, error)
 	GetEventBySlug(context.Context, string) (*Event, error)
+	GetActiveEvent(context.Context) (*Event, error)
+	SetActiveEvent(context.Context, uint64) error
 	AddFileInfo(context.Context, *FileInfo) error
 	GetFileInfo(context.Context, string) (*FileInfo, error)
 	AddThumbnailInfo(context.Context, *ThumbnailInfo) error
@@ -186,6 +188,52 @@ func (d *dbImpl) GetEventBySlug(ctx context.Context, slug string) (*Event, error
 	}
 
 	return &event, nil
+}
+
+func (d *dbImpl) GetActiveEvent(ctx context.Context) (*Event, error) {
+	var event Event
+	result := d.db.WithContext(ctx).
+		Preload(clause.Associations).
+		Preload("User.GoogleDriveToken").
+		First(&event, &Event{Active: true})
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			d.log.Errorf("no active event found in db")
+			return nil, result.Error
+		} else {
+			d.log.Errorf("getting active event from db: %v", result.Error)
+			return nil, result.Error
+		}
+	}
+	return &event, nil
+}
+
+func (d *dbImpl) SetActiveEvent(ctx context.Context, id uint64) error {
+	var events []Event
+	return d.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// may have an active one already
+		var activeEvent Event
+		err := tx.First(&activeEvent, &Event{Active: true}).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if err == nil {
+			activeEvent.Active = false
+			tx.Save(activeEvent)
+		}
+
+		result := tx.
+			Model(&events).
+			Where("id = ?", id).
+			Update("active", true)
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected != 1 {
+			return fmt.Errorf("%d events affected", result.RowsAffected)
+		}
+		return nil
+	})
 }
 
 func (d *dbImpl) AddFileInfo(ctx context.Context, fi *FileInfo) error {

@@ -15,6 +15,9 @@
       <tr>
         <th>Name</th>
         <th>Live</th>
+        {{ if .config.SingleEventMode }}
+        <th>Active</th>
+        {{ end }}
         <th>QR</th>
         <th>Delete</th>
       </tr>
@@ -22,7 +25,7 @@
 
     <tbody>
       {{ range .events }}
-      {{template "eventRow.html" .}}
+      {{template "eventRow.html" dict "event" . "config" $.config }}
       {{ end }}
     </tbody>
   </table>

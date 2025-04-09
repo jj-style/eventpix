@@ -315,6 +315,64 @@ func (_c *MockDB_DeleteGoogleToken_Call) RunAndReturn(run func(context.Context, 
 	return _c
 }
 
+// GetActiveEvent provides a mock function with given fields: _a0
+func (_m *MockDB) GetActiveEvent(_a0 context.Context) (*db.Event, error) {
+	ret := _m.Called(_a0)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetActiveEvent")
+	}
+
+	var r0 *db.Event
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (*db.Event, error)); ok {
+		return rf(_a0)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) *db.Event); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*db.Event)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockDB_GetActiveEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetActiveEvent'
+type MockDB_GetActiveEvent_Call struct {
+	*mock.Call
+}
+
+// GetActiveEvent is a helper method to define mock.On call
+//   - _a0 context.Context
+func (_e *MockDB_Expecter) GetActiveEvent(_a0 interface{}) *MockDB_GetActiveEvent_Call {
+	return &MockDB_GetActiveEvent_Call{Call: _e.mock.On("GetActiveEvent", _a0)}
+}
+
+func (_c *MockDB_GetActiveEvent_Call) Run(run func(_a0 context.Context)) *MockDB_GetActiveEvent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *MockDB_GetActiveEvent_Call) Return(_a0 *db.Event, _a1 error) *MockDB_GetActiveEvent_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockDB_GetActiveEvent_Call) RunAndReturn(run func(context.Context) (*db.Event, error)) *MockDB_GetActiveEvent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetEvent provides a mock function with given fields: _a0, _a1
 func (_m *MockDB) GetEvent(_a0 context.Context, _a1 uint64) (*db.Event, error) {
 	ret := _m.Called(_a0, _a1)
@@ -785,6 +843,53 @@ func (_c *MockDB_GetUser_Call) Return(_a0 *db.User, _a1 error) *MockDB_GetUser_C
 }
 
 func (_c *MockDB_GetUser_Call) RunAndReturn(run func(context.Context, string) (*db.User, error)) *MockDB_GetUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetActiveEvent provides a mock function with given fields: _a0, _a1
+func (_m *MockDB) SetActiveEvent(_a0 context.Context, _a1 uint64) error {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetActiveEvent")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) error); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// MockDB_SetActiveEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetActiveEvent'
+type MockDB_SetActiveEvent_Call struct {
+	*mock.Call
+}
+
+// SetActiveEvent is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 uint64
+func (_e *MockDB_Expecter) SetActiveEvent(_a0 interface{}, _a1 interface{}) *MockDB_SetActiveEvent_Call {
+	return &MockDB_SetActiveEvent_Call{Call: _e.mock.On("SetActiveEvent", _a0, _a1)}
+}
+
+func (_c *MockDB_SetActiveEvent_Call) Run(run func(_a0 context.Context, _a1 uint64)) *MockDB_SetActiveEvent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *MockDB_SetActiveEvent_Call) Return(_a0 error) *MockDB_SetActiveEvent_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *MockDB_SetActiveEvent_Call) RunAndReturn(run func(context.Context, uint64) error) *MockDB_SetActiveEvent_Call {
 	_c.Call.Return(run)
 	return _c
 }

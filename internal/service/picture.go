@@ -28,6 +28,8 @@ type EventpixService interface {
 	DeleteEvent(context.Context, *picturev1.DeleteEventRequest) (*emptypb.Empty, error)
 	Upload(context.Context, uint64, string, io.Reader, string) error
 	GetThumbnailInfo(context.Context, string) (*picturev1.Thumbnail, error)
+	GetActiveEvent(context.Context, *picturev1.GetActiveEventRequest) (*picturev1.GetEventResponse, error)
+	SetActiveEvent(context.Context, *picturev1.SetActiveEventRequest) (*emptypb.Empty, error)
 }
 
 type eventpixSvc struct {
@@ -109,6 +111,24 @@ func (p *eventpixSvc) GetEvent(ctx context.Context, req *picturev1.GetEventReque
 
 	resp := &picturev1.GetEventResponse{Event: prodto.Event(event, true)}
 	return resp, nil
+}
+
+func (p *eventpixSvc) GetActiveEvent(ctx context.Context, _ *picturev1.GetActiveEventRequest) (*picturev1.GetEventResponse, error) {
+	event, err := p.db.GetActiveEvent(ctx)
+	if err != nil {
+		p.logger.Errorf("getting active event: %v", err)
+		return nil, fmt.Errorf("getting active event: %w", err)
+	}
+	resp := &picturev1.GetEventResponse{Event: prodto.Event(event, true)}
+	return resp, nil
+}
+
+func (p *eventpixSvc) SetActiveEvent(ctx context.Context, req *picturev1.SetActiveEventRequest) (*emptypb.Empty, error) {
+	if err := p.db.SetActiveEvent(ctx, req.GetId()); err != nil {
+		p.logger.Errorf("setting active event: %v", err)
+		return nil, fmt.Errorf("failed to set active event: %v", err)
+	}
+	return &emptypb.Empty{}, nil
 }
 
 func (p *eventpixSvc) GetEvents(ctx context.Context, _ *picturev1.GetEventsRequest, userId uint) (*picturev1.GetEventsResponse, error) {

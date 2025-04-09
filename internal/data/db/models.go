@@ -16,6 +16,7 @@ type Event struct {
 	ThumbnailInfos []ThumbnailInfo
 	UserID         uint
 	User           User
+	Active         bool
 
 	storage.Storage `gorm:"-"`
 	// All available storage options for the event

@@ -12,11 +12,12 @@ type Config struct {
 }
 
 type Server struct {
-	Address     string `mapstructure:"address"`
-	Environment string `mapstructure:"environment"`
-	ServerUrl   string `mapstructure:"serverUrl"`
-	SecretKey   string `mapstructure:"secretKey"`
-	FormbeeKey  string `mapstructure:"formbeeKey"`
+	Address         string `mapstructure:"address"`
+	Environment     string `mapstructure:"environment"`
+	ServerUrl       string `mapstructure:"serverUrl"`
+	SecretKey       string `mapstructure:"secretKey"`
+	FormbeeKey      string `mapstructure:"formbeeKey"`
+	SingleEventMode bool   `mapstructure:"singleEventMode"`
 }
 
 type Database struct {

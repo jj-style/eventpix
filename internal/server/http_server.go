@@ -51,7 +51,9 @@ func NewHttpServer(
 	authGroup := r.Group("/auth")
 	authGroup.Use(htmxMiddleware)
 	authGroup.POST("/login", authService.Login)
-	authGroup.POST("/register", authService.Register)
+	if !cfg.Server.SingleEventMode {
+		authGroup.POST("/register", authService.Register)
+	}
 	authGroup.GET("/logout", authRequired, authService.Logout)
 
 	// serve static assets (html/css/js/images)

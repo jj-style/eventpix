@@ -4,6 +4,7 @@ server:
   serverUrl: http://localhost:8080
   secretKey: CHANGEME
   formbeeKey: APIKEY
+  singleEventMode: false
 oauth:
   google:
     secretsFile: 'TODO'

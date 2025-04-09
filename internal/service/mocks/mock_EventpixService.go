@@ -145,6 +145,65 @@ func (_c *MockEventpixService_DeleteEvent_Call) RunAndReturn(run func(context.Co
 	return _c
 }
 
+// GetActiveEvent provides a mock function with given fields: _a0, _a1
+func (_m *MockEventpixService) GetActiveEvent(_a0 context.Context, _a1 *picturev1.GetActiveEventRequest) (*picturev1.GetEventResponse, error) {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetActiveEvent")
+	}
+
+	var r0 *picturev1.GetEventResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *picturev1.GetActiveEventRequest) (*picturev1.GetEventResponse, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *picturev1.GetActiveEventRequest) *picturev1.GetEventResponse); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*picturev1.GetEventResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *picturev1.GetActiveEventRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockEventpixService_GetActiveEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetActiveEvent'
+type MockEventpixService_GetActiveEvent_Call struct {
+	*mock.Call
+}
+
+// GetActiveEvent is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 *picturev1.GetActiveEventRequest
+func (_e *MockEventpixService_Expecter) GetActiveEvent(_a0 interface{}, _a1 interface{}) *MockEventpixService_GetActiveEvent_Call {
+	return &MockEventpixService_GetActiveEvent_Call{Call: _e.mock.On("GetActiveEvent", _a0, _a1)}
+}
+
+func (_c *MockEventpixService_GetActiveEvent_Call) Run(run func(_a0 context.Context, _a1 *picturev1.GetActiveEventRequest)) *MockEventpixService_GetActiveEvent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*picturev1.GetActiveEventRequest))
+	})
+	return _c
+}
+
+func (_c *MockEventpixService_GetActiveEvent_Call) Return(_a0 *picturev1.GetEventResponse, _a1 error) *MockEventpixService_GetActiveEvent_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockEventpixService_GetActiveEvent_Call) RunAndReturn(run func(context.Context, *picturev1.GetActiveEventRequest) (*picturev1.GetEventResponse, error)) *MockEventpixService_GetActiveEvent_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetEvent provides a mock function with given fields: _a0, _a1
 func (_m *MockEventpixService) GetEvent(_a0 context.Context, _a1 *picturev1.GetEventRequest) (*picturev1.GetEventResponse, error) {
 	ret := _m.Called(_a0, _a1)
@@ -378,6 +437,65 @@ func (_c *MockEventpixService_GetThumbnails_Call) Return(_a0 *picturev1.GetThumb
 }
 
 func (_c *MockEventpixService_GetThumbnails_Call) RunAndReturn(run func(context.Context, *picturev1.GetThumbnailsRequest) (*picturev1.GetThumbnailsResponse, error)) *MockEventpixService_GetThumbnails_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SetActiveEvent provides a mock function with given fields: _a0, _a1
+func (_m *MockEventpixService) SetActiveEvent(_a0 context.Context, _a1 *picturev1.SetActiveEventRequest) (*emptypb.Empty, error) {
+	ret := _m.Called(_a0, _a1)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetActiveEvent")
+	}
+
+	var r0 *emptypb.Empty
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *picturev1.SetActiveEventRequest) (*emptypb.Empty, error)); ok {
+		return rf(_a0, _a1)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *picturev1.SetActiveEventRequest) *emptypb.Empty); ok {
+		r0 = rf(_a0, _a1)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*emptypb.Empty)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *picturev1.SetActiveEventRequest) error); ok {
+		r1 = rf(_a0, _a1)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockEventpixService_SetActiveEvent_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SetActiveEvent'
+type MockEventpixService_SetActiveEvent_Call struct {
+	*mock.Call
+}
+
+// SetActiveEvent is a helper method to define mock.On call
+//   - _a0 context.Context
+//   - _a1 *picturev1.SetActiveEventRequest
+func (_e *MockEventpixService_Expecter) SetActiveEvent(_a0 interface{}, _a1 interface{}) *MockEventpixService_SetActiveEvent_Call {
+	return &MockEventpixService_SetActiveEvent_Call{Call: _e.mock.On("SetActiveEvent", _a0, _a1)}
+}
+
+func (_c *MockEventpixService_SetActiveEvent_Call) Run(run func(_a0 context.Context, _a1 *picturev1.SetActiveEventRequest)) *MockEventpixService_SetActiveEvent_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*picturev1.SetActiveEventRequest))
+	})
+	return _c
+}
+
+func (_c *MockEventpixService_SetActiveEvent_Call) Return(_a0 *emptypb.Empty, _a1 error) *MockEventpixService_SetActiveEvent_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockEventpixService_SetActiveEvent_Call) RunAndReturn(run func(context.Context, *picturev1.SetActiveEventRequest) (*emptypb.Empty, error)) *MockEventpixService_SetActiveEvent_Call {
 	_c.Call.Return(run)
 	return _c
 }
