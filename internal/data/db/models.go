@@ -17,6 +17,7 @@ type Event struct {
 	UserID         uint
 	User           User
 	Active         bool
+	Password       *gormcrypto.EncryptedValue
 
 	storage.Storage `gorm:"-"`
 	// All available storage options for the event

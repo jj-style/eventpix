@@ -36,6 +36,8 @@ message Event {
     }
     // Whether the event is active
     bool active = 8;
+    // Password of the event
+    google.protobuf.StringValue password = 9;
 }
 
 // Wrapper around a list of FileInfo
@@ -69,6 +71,8 @@ message CreateEventRequest {
         S3 s3 = 5;
         GoogleDrive googleDrive = 6;
     }
+    // Password of the event
+    string password = 7;
 }
 
 // Response from successfully creating an event

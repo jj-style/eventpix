@@ -4,6 +4,7 @@ import (
 	"github.com/jj-style/eventpix/internal/data/db"
 	picturev1 "github.com/jj-style/eventpix/internal/gen/picture/v1"
 	"github.com/samber/lo"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 func Event(e *db.Event, withFileInfos bool) *picturev1.Event {
@@ -17,6 +18,9 @@ func Event(e *db.Event, withFileInfos bool) *picturev1.Event {
 		ret.FileInfos = &picturev1.FileInfosValue{
 			Value: lo.Map(e.FileInfos, func(item db.FileInfo, _ int) *picturev1.FileInfo { return FileInfo(&item) }),
 		}
+	}
+	if e.Password != nil {
+		ret.Password = wrapperspb.String(e.Password.Raw.(string))
 	}
 	return ret
 }

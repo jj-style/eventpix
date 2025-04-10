@@ -50,6 +50,9 @@ func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picture
 		Live:   req.GetLive(),
 		UserID: userId,
 	}
+	if pwd := req.GetPassword(); pwd != "" {
+		createEvent.Password = &gormcrypto.EncryptedValue{Raw: pwd}
+	}
 	switch st := req.GetStorage().(type) {
 	case *picturev1.CreateEventRequest_Filesystem:
 		createEvent.FileSystemStorage = &db.FileSystemStorage{

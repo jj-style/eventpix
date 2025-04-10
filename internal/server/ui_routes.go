@@ -120,7 +120,7 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 	hra.POST("/event", createEvent(svc, htmx))
 	hra.GET("/events", getEvents(svc, cfg.Server))
 	hra.GET("/event/:id/qr/modal", userEventMiddleware, getEventQrModal(svc))
-	hra.GET("/event/:id/qr", userEventMiddleware, getQrCode(cfg))
+	hra.GET("/event/:id/qr", userEventMiddleware, getQrCode(cfg, svc))
 	hra.GET("/profile", getProfile(cfg.OauthSecrets))
 	hra.GET("/storageForm", getStorageForm())
 	hra.GET("/googleDrivePicker", getDrivePicker(cfg.OauthSecrets))
@@ -355,11 +355,12 @@ func getEventQrModal(svc service.EventpixService) gin.HandlerFunc {
 	}
 }
 
-func getQrCode(cfg *config.Config) gin.HandlerFunc {
+func getQrCode(cfg *config.Config, svc service.EventpixService) gin.HandlerFunc {
 	type request struct {
-		Size       int    `form:"size"`
-		Foreground string `form:"foreground"`
-		Background string `form:"background"`
+		Size            int    `form:"size"`
+		Foreground      string `form:"foreground"`
+		Background      string `form:"background"`
+		IncludePassword string `form:"includePassword"`
 	}
 
 	return func(c *gin.Context) {
@@ -370,9 +371,26 @@ func getQrCode(cfg *config.Config) gin.HandlerFunc {
 		}
 
 		eventId := c.MustGet("eventId").(uint64)
-		eventUrl := fmt.Sprintf("%s/event/%d", cfg.Server.ServerUrl, eventId)
+		event, err := svc.GetEvent(c, &picturev1.GetEventRequest{Value: &picturev1.GetEventRequest_Id{Id: eventId}})
+		if err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
 
-		q, err := qrcode.New(eventUrl, qrcode.Medium)
+		eventUrlString := fmt.Sprintf("%s/event/%d", cfg.Server.ServerUrl, eventId)
+
+		eventUrl, err := url.Parse(eventUrlString)
+		if err != nil {
+			AbortWithError(c, http.StatusInternalServerError, err)
+			return
+		}
+
+		// optionally encode basic auth into QR code so guest can scan straight into event
+		if req.IncludePassword == "on" && event.GetEvent().GetPassword() != nil {
+			eventUrl.User = url.UserPassword("guest", event.GetEvent().GetPassword().GetValue())
+		}
+
+		q, err := qrcode.New(eventUrl.String(), qrcode.Medium)
 		if err != nil {
 			AbortWithError(c, http.StatusInternalServerError, err)
 			return
@@ -415,6 +433,10 @@ func getActiveEvent(svc service.EventpixService) gin.HandlerFunc {
 				c.AbortWithError(http.StatusBadRequest, err)
 				return
 			}
+		}
+
+		if pwd := event.GetEvent().GetPassword(); pwd != nil {
+			gin.BasicAuth(gin.Accounts{"guest": pwd.GetValue()})(c)
 		}
 		c.HTML(http.StatusOK, "eventGallery", gin.H{"title": event.Event.Name, "event": event.Event})
 	}
@@ -637,6 +659,11 @@ func getEvent(svc service.EventpixService) gin.HandlerFunc {
 			request.Value = &picturev1.GetEventRequest_Id{Id: eventId}
 		}
 		event, err := svc.GetEvent(c, request)
+
+		if pwd := event.GetEvent().GetPassword(); pwd != nil {
+			gin.BasicAuth(gin.Accounts{"guest": pwd.GetValue()})(c)
+		}
+
 		if err != nil {
 			c.AbortWithError(http.StatusBadRequest, err)
 			return

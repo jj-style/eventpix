@@ -27,6 +27,19 @@
                     <input type="color" id="background" name="background" value="#ffffff">
                 </div>
             </div>
+            {{ if ne .event.Password nil }}
+            <div class="form-row">
+                <div class="form-check">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="includePassword"
+                    name="includePassword"
+                />
+                <label class="form-check-label" for="includePassword"> Include Password</label>
+      </div>
+            </div>
+            {{ end }}
         </form>
     </div>
     <div class="modal-footer">
