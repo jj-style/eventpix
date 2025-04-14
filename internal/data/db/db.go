@@ -87,6 +87,7 @@ func NewDb(cfg *config.Database, logger *zap.Logger, googleOauthConfig *oauth2.C
 		&FileSystemStorage{},
 		&S3Storage{},
 		&GoogleDriveStorage{},
+		&FtpStorage{},
 	); err != nil {
 		return nil, func() {}, fmt.Errorf("migrating db: %w", err)
 	}

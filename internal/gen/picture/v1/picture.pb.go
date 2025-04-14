@@ -41,6 +41,7 @@ type Event struct {
 	//	*Event_Filesystem
 	//	*Event_S3
 	//	*Event_GoogleDrive
+	//	*Event_Ftp
 	Storage isEvent_Storage `protobuf_oneof:"storage"`
 	// Whether the event is active
 	Active bool `protobuf:"varint,8,opt,name=active,proto3" json:"active,omitempty"`
@@ -142,6 +143,15 @@ func (x *Event) GetGoogleDrive() *GoogleDrive {
 	return nil
 }
 
+func (x *Event) GetFtp() *Ftp {
+	if x != nil {
+		if x, ok := x.Storage.(*Event_Ftp); ok {
+			return x.Ftp
+		}
+	}
+	return nil
+}
+
 func (x *Event) GetActive() bool {
 	if x != nil {
 		return x.Active
@@ -172,11 +182,17 @@ type Event_GoogleDrive struct {
 	GoogleDrive *GoogleDrive `protobuf:"bytes,7,opt,name=googleDrive,proto3,oneof"`
 }
 
+type Event_Ftp struct {
+	Ftp *Ftp `protobuf:"bytes,10,opt,name=ftp,proto3,oneof"`
+}
+
 func (*Event_Filesystem) isEvent_Storage() {}
 
 func (*Event_S3) isEvent_Storage() {}
 
 func (*Event_GoogleDrive) isEvent_Storage() {}
+
+func (*Event_Ftp) isEvent_Storage() {}
 
 // Wrapper around a list of FileInfo
 type FileInfosValue struct {
@@ -312,6 +328,7 @@ type CreateEventRequest struct {
 	//	*CreateEventRequest_Filesystem
 	//	*CreateEventRequest_S3
 	//	*CreateEventRequest_GoogleDrive
+	//	*CreateEventRequest_Ftp
 	Storage isCreateEventRequest_Storage `protobuf_oneof:"storage"`
 	// Password of the event
 	Password      string `protobuf:"bytes,7,opt,name=password,proto3" json:"password,omitempty"`
@@ -404,6 +421,15 @@ func (x *CreateEventRequest) GetGoogleDrive() *GoogleDrive {
 	return nil
 }
 
+func (x *CreateEventRequest) GetFtp() *Ftp {
+	if x != nil {
+		if x, ok := x.Storage.(*CreateEventRequest_Ftp); ok {
+			return x.Ftp
+		}
+	}
+	return nil
+}
+
 func (x *CreateEventRequest) GetPassword() string {
 	if x != nil {
 		return x.Password
@@ -427,11 +453,17 @@ type CreateEventRequest_GoogleDrive struct {
 	GoogleDrive *GoogleDrive `protobuf:"bytes,6,opt,name=googleDrive,proto3,oneof"`
 }
 
+type CreateEventRequest_Ftp struct {
+	Ftp *Ftp `protobuf:"bytes,8,opt,name=ftp,proto3,oneof"`
+}
+
 func (*CreateEventRequest_Filesystem) isCreateEventRequest_Storage() {}
 
 func (*CreateEventRequest_S3) isCreateEventRequest_Storage() {}
 
 func (*CreateEventRequest_GoogleDrive) isCreateEventRequest_Storage() {}
+
+func (*CreateEventRequest_Ftp) isCreateEventRequest_Storage() {}
 
 // Response from successfully creating an event
 type CreateEventResponse struct {
@@ -1245,7 +1277,7 @@ var File_picture_v1_picture_proto protoreflect.FileDescriptor
 const file_picture_v1_picture_proto_rawDesc = "" +
 	"\n" +
 	"\x18picture/v1/picture.proto\x12\n" +
-	"picture.v1\x1a\x18picture/v1/storage.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xf0\x02\n" +
+	"picture.v1\x1a\x18picture/v1/storage.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x95\x03\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -1256,7 +1288,9 @@ const file_picture_v1_picture_proto_rawDesc = "" +
 	"filesystem\x18\x05 \x01(\v2\x16.picture.v1.FilesystemH\x00R\n" +
 	"filesystem\x12 \n" +
 	"\x02s3\x18\x06 \x01(\v2\x0e.picture.v1.S3H\x00R\x02s3\x12;\n" +
-	"\vgoogleDrive\x18\a \x01(\v2\x17.picture.v1.GoogleDriveH\x00R\vgoogleDrive\x12\x16\n" +
+	"\vgoogleDrive\x18\a \x01(\v2\x17.picture.v1.GoogleDriveH\x00R\vgoogleDrive\x12#\n" +
+	"\x03ftp\x18\n" +
+	" \x01(\v2\x0f.picture.v1.FtpH\x00R\x03ftp\x12\x16\n" +
 	"\x06active\x18\b \x01(\bR\x06active\x128\n" +
 	"\bpassword\x18\t \x01(\v2\x1c.google.protobuf.StringValueR\bpasswordB\t\n" +
 	"\astorage\"<\n" +
@@ -1266,7 +1300,7 @@ const file_picture_v1_picture_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05video\x18\x03 \x01(\bR\x05video\x12\x19\n" +
-	"\bevent_id\x18\x04 \x01(\x04R\aeventId\"\x90\x02\n" +
+	"\bevent_id\x18\x04 \x01(\x04R\aeventId\"\xb5\x02\n" +
 	"\x12CreateEventRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x12\n" +
@@ -1275,7 +1309,8 @@ const file_picture_v1_picture_proto_rawDesc = "" +
 	"filesystem\x18\x04 \x01(\v2\x16.picture.v1.FilesystemH\x00R\n" +
 	"filesystem\x12 \n" +
 	"\x02s3\x18\x05 \x01(\v2\x0e.picture.v1.S3H\x00R\x02s3\x12;\n" +
-	"\vgoogleDrive\x18\x06 \x01(\v2\x17.picture.v1.GoogleDriveH\x00R\vgoogleDrive\x12\x1a\n" +
+	"\vgoogleDrive\x18\x06 \x01(\v2\x17.picture.v1.GoogleDriveH\x00R\vgoogleDrive\x12#\n" +
+	"\x03ftp\x18\b \x01(\v2\x0f.picture.v1.FtpH\x00R\x03ftp\x12\x1a\n" +
 	"\bpassword\x18\a \x01(\tR\bpasswordB\t\n" +
 	"\astorage\"%\n" +
 	"\x13CreateEventResponse\x12\x0e\n" +
@@ -1370,48 +1405,51 @@ var file_picture_v1_picture_proto_goTypes = []any{
 	(*Filesystem)(nil),             // 20: picture.v1.Filesystem
 	(*S3)(nil),                     // 21: picture.v1.S3
 	(*GoogleDrive)(nil),            // 22: picture.v1.GoogleDrive
-	(*wrapperspb.StringValue)(nil), // 23: google.protobuf.StringValue
-	(*emptypb.Empty)(nil),          // 24: google.protobuf.Empty
+	(*Ftp)(nil),                    // 23: picture.v1.Ftp
+	(*wrapperspb.StringValue)(nil), // 24: google.protobuf.StringValue
+	(*emptypb.Empty)(nil),          // 25: google.protobuf.Empty
 }
 var file_picture_v1_picture_proto_depIdxs = []int32{
 	1,  // 0: picture.v1.Event.file_infos:type_name -> picture.v1.FileInfosValue
 	20, // 1: picture.v1.Event.filesystem:type_name -> picture.v1.Filesystem
 	21, // 2: picture.v1.Event.s3:type_name -> picture.v1.S3
 	22, // 3: picture.v1.Event.googleDrive:type_name -> picture.v1.GoogleDrive
-	23, // 4: picture.v1.Event.password:type_name -> google.protobuf.StringValue
-	2,  // 5: picture.v1.FileInfosValue.value:type_name -> picture.v1.FileInfo
-	20, // 6: picture.v1.CreateEventRequest.filesystem:type_name -> picture.v1.Filesystem
-	21, // 7: picture.v1.CreateEventRequest.s3:type_name -> picture.v1.S3
-	22, // 8: picture.v1.CreateEventRequest.googleDrive:type_name -> picture.v1.GoogleDrive
-	0,  // 9: picture.v1.GetEventsResponse.events:type_name -> picture.v1.Event
-	0,  // 10: picture.v1.GetEventResponse.event:type_name -> picture.v1.Event
-	0,  // 11: picture.v1.SetEventLiveResponse.event:type_name -> picture.v1.Event
-	15, // 12: picture.v1.UploadRequest.file:type_name -> picture.v1.File
-	19, // 13: picture.v1.GetThumbnailsResponse.thumbnails:type_name -> picture.v1.Thumbnail
-	2,  // 14: picture.v1.Thumbnail.file_info:type_name -> picture.v1.FileInfo
-	3,  // 15: picture.v1.PictureService.CreateEvent:input_type -> picture.v1.CreateEventRequest
-	11, // 16: picture.v1.PictureService.SetEventLive:input_type -> picture.v1.SetEventLiveRequest
-	5,  // 17: picture.v1.PictureService.GetEvents:input_type -> picture.v1.GetEventsRequest
-	7,  // 18: picture.v1.PictureService.GetEvent:input_type -> picture.v1.GetEventRequest
-	8,  // 19: picture.v1.PictureService.GetActiveEvent:input_type -> picture.v1.GetActiveEventRequest
-	9,  // 20: picture.v1.PictureService.SetActiveEvent:input_type -> picture.v1.SetActiveEventRequest
-	13, // 21: picture.v1.PictureService.DeleteEvent:input_type -> picture.v1.DeleteEventRequest
-	14, // 22: picture.v1.PictureService.Upload:input_type -> picture.v1.UploadRequest
-	17, // 23: picture.v1.PictureService.GetThumbnails:input_type -> picture.v1.GetThumbnailsRequest
-	4,  // 24: picture.v1.PictureService.CreateEvent:output_type -> picture.v1.CreateEventResponse
-	12, // 25: picture.v1.PictureService.SetEventLive:output_type -> picture.v1.SetEventLiveResponse
-	6,  // 26: picture.v1.PictureService.GetEvents:output_type -> picture.v1.GetEventsResponse
-	10, // 27: picture.v1.PictureService.GetEvent:output_type -> picture.v1.GetEventResponse
-	10, // 28: picture.v1.PictureService.GetActiveEvent:output_type -> picture.v1.GetEventResponse
-	24, // 29: picture.v1.PictureService.SetActiveEvent:output_type -> google.protobuf.Empty
-	24, // 30: picture.v1.PictureService.DeleteEvent:output_type -> google.protobuf.Empty
-	16, // 31: picture.v1.PictureService.Upload:output_type -> picture.v1.UploadResponse
-	18, // 32: picture.v1.PictureService.GetThumbnails:output_type -> picture.v1.GetThumbnailsResponse
-	24, // [24:33] is the sub-list for method output_type
-	15, // [15:24] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	23, // 4: picture.v1.Event.ftp:type_name -> picture.v1.Ftp
+	24, // 5: picture.v1.Event.password:type_name -> google.protobuf.StringValue
+	2,  // 6: picture.v1.FileInfosValue.value:type_name -> picture.v1.FileInfo
+	20, // 7: picture.v1.CreateEventRequest.filesystem:type_name -> picture.v1.Filesystem
+	21, // 8: picture.v1.CreateEventRequest.s3:type_name -> picture.v1.S3
+	22, // 9: picture.v1.CreateEventRequest.googleDrive:type_name -> picture.v1.GoogleDrive
+	23, // 10: picture.v1.CreateEventRequest.ftp:type_name -> picture.v1.Ftp
+	0,  // 11: picture.v1.GetEventsResponse.events:type_name -> picture.v1.Event
+	0,  // 12: picture.v1.GetEventResponse.event:type_name -> picture.v1.Event
+	0,  // 13: picture.v1.SetEventLiveResponse.event:type_name -> picture.v1.Event
+	15, // 14: picture.v1.UploadRequest.file:type_name -> picture.v1.File
+	19, // 15: picture.v1.GetThumbnailsResponse.thumbnails:type_name -> picture.v1.Thumbnail
+	2,  // 16: picture.v1.Thumbnail.file_info:type_name -> picture.v1.FileInfo
+	3,  // 17: picture.v1.PictureService.CreateEvent:input_type -> picture.v1.CreateEventRequest
+	11, // 18: picture.v1.PictureService.SetEventLive:input_type -> picture.v1.SetEventLiveRequest
+	5,  // 19: picture.v1.PictureService.GetEvents:input_type -> picture.v1.GetEventsRequest
+	7,  // 20: picture.v1.PictureService.GetEvent:input_type -> picture.v1.GetEventRequest
+	8,  // 21: picture.v1.PictureService.GetActiveEvent:input_type -> picture.v1.GetActiveEventRequest
+	9,  // 22: picture.v1.PictureService.SetActiveEvent:input_type -> picture.v1.SetActiveEventRequest
+	13, // 23: picture.v1.PictureService.DeleteEvent:input_type -> picture.v1.DeleteEventRequest
+	14, // 24: picture.v1.PictureService.Upload:input_type -> picture.v1.UploadRequest
+	17, // 25: picture.v1.PictureService.GetThumbnails:input_type -> picture.v1.GetThumbnailsRequest
+	4,  // 26: picture.v1.PictureService.CreateEvent:output_type -> picture.v1.CreateEventResponse
+	12, // 27: picture.v1.PictureService.SetEventLive:output_type -> picture.v1.SetEventLiveResponse
+	6,  // 28: picture.v1.PictureService.GetEvents:output_type -> picture.v1.GetEventsResponse
+	10, // 29: picture.v1.PictureService.GetEvent:output_type -> picture.v1.GetEventResponse
+	10, // 30: picture.v1.PictureService.GetActiveEvent:output_type -> picture.v1.GetEventResponse
+	25, // 31: picture.v1.PictureService.SetActiveEvent:output_type -> google.protobuf.Empty
+	25, // 32: picture.v1.PictureService.DeleteEvent:output_type -> google.protobuf.Empty
+	16, // 33: picture.v1.PictureService.Upload:output_type -> picture.v1.UploadResponse
+	18, // 34: picture.v1.PictureService.GetThumbnails:output_type -> picture.v1.GetThumbnailsResponse
+	26, // [26:35] is the sub-list for method output_type
+	17, // [17:26] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_picture_v1_picture_proto_init() }
@@ -1424,11 +1462,13 @@ func file_picture_v1_picture_proto_init() {
 		(*Event_Filesystem)(nil),
 		(*Event_S3)(nil),
 		(*Event_GoogleDrive)(nil),
+		(*Event_Ftp)(nil),
 	}
 	file_picture_v1_picture_proto_msgTypes[3].OneofWrappers = []any{
 		(*CreateEventRequest_Filesystem)(nil),
 		(*CreateEventRequest_S3)(nil),
 		(*CreateEventRequest_GoogleDrive)(nil),
+		(*CreateEventRequest_Ftp)(nil),
 	}
 	file_picture_v1_picture_proto_msgTypes[7].OneofWrappers = []any{
 		(*GetEventRequest_Id)(nil),

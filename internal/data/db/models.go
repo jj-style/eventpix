@@ -25,6 +25,7 @@ type Event struct {
 	FileSystemStorage  *FileSystemStorage
 	S3Storage          *S3Storage
 	GoogleDriveStorage *GoogleDriveStorage
+	FtpStorage         *FtpStorage
 }
 
 type FileInfo struct {
@@ -81,4 +82,13 @@ type GoogleDriveToken struct {
 	gorm.Model
 	Token  gormcrypto.EncryptedValue
 	UserID uint
+}
+
+type FtpStorage struct {
+	gorm.Model
+	Address   string
+	Directory string
+	Username  gormcrypto.EncryptedValue
+	Password  gormcrypto.EncryptedValue
+	EventID   uint
 }

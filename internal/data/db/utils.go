@@ -34,6 +34,17 @@ func ExtractEventStorage(evt *Event, googleOauthConfig *oauth2.Config) error {
 			return err
 		}
 		evt.Storage = gdrive
+	} else if st := evt.FtpStorage; st != nil {
+		ftp, err := storage.NewFtpStore(&storage.FtpConfig{
+			Address:   st.Address,
+			Directory: st.Directory,
+			Username:  st.Username.Raw.(string),
+			Password:  st.Password.Raw.(string),
+		})
+		if err != nil {
+			return err
+		}
+		evt.Storage = ftp
 	} else {
 		return ErrNoStorage
 	}

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"strings"
 	"testing"
 
 	"github.com/jj-style/eventpix/internal/data/storage"
@@ -15,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	miniotc "github.com/testcontainers/testcontainers-go/modules/minio"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 // a base test suite for storage implementations
@@ -30,6 +32,17 @@ func TestStorage(t *testing.T) {
 		return
 	}
 
+	ftpConn, ftpUsername, ftpPassword := createFtp(ctx, t)
+	ftpStore, err := storage.NewFtpStore(&storage.FtpConfig{
+		Address:   ftpConn + ":21",
+		Username:  ftpUsername,
+		Password:  ftpPassword,
+		Directory: "/",
+	})
+	if err != nil {
+		t.Fatalf("setting up ftp: %v", err)
+		return
+	}
 	stores := map[string]storage.Storage{
 		"memory":     storage.NewMemStore(),
 		"filesystem": storage.NewFilesystem(afero.NewMemMapFs(), "/store"),
@@ -40,15 +53,15 @@ func TestStorage(t *testing.T) {
 			SecretKey: s3Password,
 			Bucket:    "test",
 		}),
+		"ftp": ftpStore,
 	}
 
 	for name, store := range stores {
 		t.Run(name+" happy", func(t *testing.T) {
 			t.Parallel()
-
 			// store some data
 			data := bytes.NewReader([]byte("data"))
-			id, err := store.Store(ctx, t.Name(), data)
+			id, err := store.Store(ctx, strings.ReplaceAll(t.Name(), "/", "_"), data)
 			require.NoError(t, err)
 			require.NotEmpty(t, id)
 
@@ -117,4 +130,29 @@ func createMinioWithBucket(ctx context.Context, t *testing.T) (string, string, s
 	}
 
 	return "http://" + s3Conn, minioContainer.Username, minioContainer.Password, nil
+}
+
+func createFtp(ctx context.Context, t *testing.T) (string, string, string) {
+	t.Helper()
+
+	req := testcontainers.ContainerRequest{
+		Image:        "garethflowers/ftp-server",
+		ExposedPorts: []string{"20/tcp", "21/tcp"},
+		Env: map[string]string{
+			"FTP_USER": "user",
+			"FTP_PASS": "123",
+		},
+		WaitingFor: wait.ForLog("chpasswd: password for 'user' changed"),
+	}
+	ftp, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	require.NoError(t, err)
+	testcontainers.CleanupContainer(t, ftp)
+
+	ip, err := ftp.ContainerIP(ctx)
+	require.NoError(t, err)
+
+	return ip, "user", "123"
 }

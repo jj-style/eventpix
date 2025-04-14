@@ -77,6 +77,7 @@ func createRenderer() multitemplate.Renderer {
 	r.AddFromFS("filesystem", content, "assets/templates/forms/filesystem.html")
 	r.AddFromFS("s3", content, "assets/templates/forms/s3.html")
 	r.AddFromFS("google", content, "assets/templates/forms/google.html")
+	r.AddFromFS("ftp", content, "assets/templates/forms/ftp.html")
 
 	r.AddFromFS("login", content, base, "assets/templates/login.html")
 	r.AddFromFS("register", content, base, "assets/templates/register.html")
@@ -580,6 +581,7 @@ func getCreateEvent() gin.HandlerFunc {
 		}{
 			{Name: "Filesystem", Value: "filesystem"},
 			{Name: "S3", Value: "s3"},
+			{Name: "Ftp", Value: "ftp"},
 			{Name: "Google", Value: "google", Disabled: user.GoogleDriveToken == nil},
 		}
 		c.HTML(200, "createEvent", gin.H{

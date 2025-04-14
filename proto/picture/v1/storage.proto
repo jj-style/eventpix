@@ -17,3 +17,10 @@ message S3 {
 message GoogleDrive {
     string folder_id = 1;
 }
+
+message Ftp {
+    string address   = 1;
+    string username  = 2;
+    string password  = 3;
+    string directory = 4;
+}

@@ -33,6 +33,7 @@ message Event {
         Filesystem filesystem = 5;
         S3 s3 = 6;
         GoogleDrive googleDrive = 7;
+        Ftp ftp = 10;
     }
     // Whether the event is active
     bool active = 8;
@@ -70,6 +71,7 @@ message CreateEventRequest {
         Filesystem filesystem = 4;
         S3 s3 = 5;
         GoogleDrive googleDrive = 6;
+        Ftp ftp = 8;
     }
     // Password of the event
     string password = 7;

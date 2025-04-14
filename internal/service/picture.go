@@ -70,6 +70,13 @@ func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picture
 		createEvent.GoogleDriveStorage = &db.GoogleDriveStorage{
 			DirectoryID: st.GoogleDrive.GetFolderId(),
 		}
+	case *picturev1.CreateEventRequest_Ftp:
+		createEvent.FtpStorage = &db.FtpStorage{
+			Address:   st.Ftp.GetAddress(),
+			Directory: st.Ftp.GetDirectory(),
+			Username:  gormcrypto.EncryptedValue{Raw: st.Ftp.GetUsername()},
+			Password:  gormcrypto.EncryptedValue{Raw: st.Ftp.GetPassword()},
+		}
 	default:
 		return nil, errors.New("unsupported storage type")
 	}

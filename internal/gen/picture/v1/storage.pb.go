@@ -185,6 +185,74 @@ func (x *GoogleDrive) GetFolderId() string {
 	return ""
 }
 
+type Ftp struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Address       string                 `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	Username      string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	Password      string                 `protobuf:"bytes,3,opt,name=password,proto3" json:"password,omitempty"`
+	Directory     string                 `protobuf:"bytes,4,opt,name=directory,proto3" json:"directory,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Ftp) Reset() {
+	*x = Ftp{}
+	mi := &file_picture_v1_storage_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Ftp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Ftp) ProtoMessage() {}
+
+func (x *Ftp) ProtoReflect() protoreflect.Message {
+	mi := &file_picture_v1_storage_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Ftp.ProtoReflect.Descriptor instead.
+func (*Ftp) Descriptor() ([]byte, []int) {
+	return file_picture_v1_storage_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Ftp) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *Ftp) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *Ftp) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *Ftp) GetDirectory() string {
+	if x != nil {
+		return x.Directory
+	}
+	return ""
+}
+
 var File_picture_v1_storage_proto protoreflect.FileDescriptor
 
 const file_picture_v1_storage_proto_rawDesc = "" +
@@ -203,7 +271,12 @@ const file_picture_v1_storage_proto_rawDesc = "" +
 	"\x06region\x18\x04 \x01(\tR\x06region\x12\x1a\n" +
 	"\bendpoint\x18\x05 \x01(\tR\bendpoint\"*\n" +
 	"\vGoogleDrive\x12\x1b\n" +
-	"\tfolder_id\x18\x01 \x01(\tR\bfolderIdB\xa7\x01\n" +
+	"\tfolder_id\x18\x01 \x01(\tR\bfolderId\"u\n" +
+	"\x03Ftp\x12\x18\n" +
+	"\aaddress\x18\x01 \x01(\tR\aaddress\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
+	"\bpassword\x18\x03 \x01(\tR\bpassword\x12\x1c\n" +
+	"\tdirectory\x18\x04 \x01(\tR\tdirectoryB\xa7\x01\n" +
 	"\x0ecom.picture.v1B\fStorageProtoP\x01Z>github.com/jj-style/eventpix/internal/gen/picture/v1;picturev1\xa2\x02\x03PXX\xaa\x02\n" +
 	"Picture.V1\xca\x02\n" +
 	"Picture\\V1\xe2\x02\x16Picture\\V1\\GPBMetadata\xea\x02\vPicture::V1b\x06proto3"
@@ -220,11 +293,12 @@ func file_picture_v1_storage_proto_rawDescGZIP() []byte {
 	return file_picture_v1_storage_proto_rawDescData
 }
 
-var file_picture_v1_storage_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_picture_v1_storage_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_picture_v1_storage_proto_goTypes = []any{
 	(*Filesystem)(nil),  // 0: picture.v1.Filesystem
 	(*S3)(nil),          // 1: picture.v1.S3
 	(*GoogleDrive)(nil), // 2: picture.v1.GoogleDrive
+	(*Ftp)(nil),         // 3: picture.v1.Ftp
 }
 var file_picture_v1_storage_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -245,7 +319,7 @@ func file_picture_v1_storage_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_picture_v1_storage_proto_rawDesc), len(file_picture_v1_storage_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
