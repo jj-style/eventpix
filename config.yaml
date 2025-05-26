@@ -16,7 +16,7 @@ database:
   encryptionKey: A/vDd4Jk3fF8dgrjhkVf2qA950jSFw+wwzAqsWEHQqo=
   # uri: file::memory:?cache=shared
 nats:
-  inProcess: true
+  inProcess: false
   url: "127.0.0.1:4222"
 imagor:
   url: http://localhost:8000

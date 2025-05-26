@@ -1,24 +1,21 @@
 package storage
 
 import (
-	"bytes"
 	"context"
 	"io"
 
 	"github.com/google/uuid"
-	"github.com/rhnvrm/simples3"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type s3Store struct {
-	s3     *simples3.S3
+	s3     *minio.Client
 	bucket string
 }
 
 func (s *s3Store) Get(ctx context.Context, name string) (io.ReadCloser, error) {
-	file, err := s.s3.FileDownload(simples3.DownloadInput{
-		Bucket:    s.bucket,
-		ObjectKey: name,
-	})
+	file, err := s.s3.GetObject(ctx, s.bucket, name, minio.GetObjectOptions{})
 	if err != nil {
 		if err.Error() == "status code: 404 Not Found" {
 			return nil, ErrFileNotFound
@@ -29,18 +26,8 @@ func (s *s3Store) Get(ctx context.Context, name string) (io.ReadCloser, error) {
 }
 
 func (s *s3Store) Store(ctx context.Context, name string, file io.Reader) (string, error) {
-	data, err := io.ReadAll(file)
-	if err != nil {
-		return "", err
-	}
 	id := uuid.NewString()
-	_, err = s.s3.FileUpload(simples3.UploadInput{
-		Bucket:      s.bucket,
-		ObjectKey:   id,
-		ContentType: "text/plain",
-		FileName:    name,
-		Body:        bytes.NewReader(data),
-	})
+	_, err := s.s3.PutObject(ctx, s.bucket, id, file, -1, minio.PutObjectOptions{})
 	return id, err
 }
 
@@ -53,9 +40,12 @@ type S3Config struct {
 }
 
 func NewS3Store(cfg *S3Config) Storage {
-	s3 := simples3.New(cfg.Region, cfg.AccessKey, cfg.SecretKey)
-	if cfg.Endpoint != "" {
-		s3.SetEndpoint(cfg.Endpoint)
+	minioClient, err := minio.New(cfg.Endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
+		Secure: true,
+	})
+	if err != nil {
+		panic(err)
 	}
-	return &s3Store{s3: s3, bucket: cfg.Bucket}
+	return &s3Store{s3: minioClient, bucket: cfg.Bucket}
 }

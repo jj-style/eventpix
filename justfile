@@ -23,3 +23,6 @@ test-full: (test "-shuffle on -race")
 
 run:
     watchexec -e go -e html -e js -e css -r go run main.go server
+
+thumbnailer:
+    watchexec -e go -e html -e js -e css -r go run main.go thumbnailer
