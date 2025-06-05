@@ -77,6 +77,11 @@ func newGoogleDriveConfig(cfg *config.Config) (*oauth2.Config, error) {
 
 func newCache(cfg *config.Cache) (cache.CacheInterface[[]byte], error) {
 	// TODO(jj) : add cache serializer to encrypt bytes?
+
+	// default to in memory 60s cache if nothing specified
+	if cfg == nil {
+		cfg = &config.Cache{Mode: "memory", Ttl: 60}
+	}
 	switch cfg.Mode {
 	case "memory":
 		gocacheClient := go_cache.New(time.Second*time.Duration(cfg.Ttl), 10*time.Minute)

@@ -214,6 +214,7 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 		return err
 	}
 
+	// TODO(jj) - cache should be optional per event
 	// TODO(jj) - src reader will be empty now :(
 	if err := p.cache.Set(ctx, fmt.Sprintf("%d:%s", eventId, filename), nil); err != nil {
 		return err
