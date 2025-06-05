@@ -1,7 +1,7 @@
 {{$length := len .thumbnails}}
 
 {{range $index, $item := .thumbnails}}
-<div style="border: none;" class="card m-1" {{if (isLast $index $length)}} hx-trigger="revealed" hx-swap="afterend" hx-get="/thumbnails/{{$.eventId}}?page={{$.nextPage}}" hx-indicator="#spinner"{{end}}>
+<div style="border: none;" class="card m-1" {{if (isLast $index $length)}} hx-trigger="revealed" hx-swap="afterend" hx-get="/thumbnails/{{$.eventId}}?page={{$.nextPage}}" hx-indicator="#loading-gallery-indicator"{{end}}>
     {{ if $item.FileInfo.Video }}
     <a
         class="lg-item"

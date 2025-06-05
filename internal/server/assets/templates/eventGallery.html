@@ -20,6 +20,21 @@
     body {
         background-color: azure;
     }
+
+    .htmx-indicator{
+        opacity:0;
+        display: none;
+        transition: opacity 500ms ease-in;
+    }
+    .htmx-request .spinner{
+        opacity:1;
+        display: inline-block;
+    }
+    .htmx-request.spinner{
+        display: inline-block;
+        opacity:1;
+    }
+
 </style>
 {{end}}
 
@@ -35,13 +50,23 @@
             </div>
             <div class="modal-body" hx-ext="response-targets">
                 <div class="mb-3">
-                    <form id='uploadForm' hx-encoding='multipart/form-data' hx-post='/upload' hx-target="#uploadFormResult" hx-target-error="#uploadFormError">
+                    <form id='uploadForm'
+                        hx-encoding='multipart/form-data'
+                        hx-post='/upload'
+                        hx-target="#uploadFormResult"
+                        hx-target-error="#uploadFormError"
+                        hx-disabled-elt="find button"
+                        hx-indicator="#upload-indicator"
+                    >
                         <input type="hidden" id="event.Id" name="eventId" value="{{.event.Id}}">
                         <div class="form-group mb-2">
                             <label for="files" class="form-label">Select files</label>
                             <input class="form-control" type="file" name="files" id="files" multiple>
                         </div>
-                        <button type="submit" class="btn btn-primary">Upload</button>
+                        <button type="submit" class="btn btn-primary">
+                        <span id="upload-indicator" class="spinner-border spinner-border-sm htmx-indicator spinner" role="status" aria-hidden="true"></span>
+                        Upload
+                        </button>
                     </form>
                 </div>
                 <div id="uploadFormResult"></div>
@@ -65,12 +90,12 @@
         hx-swap="afterbegin" 
     >
         <!-- initial load -->
-        <span hx-get="/thumbnails/{{.event.Id}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-indicator="#spinner"></span>
+        <span hx-get="/thumbnails/{{.event.Id}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-indicator="#loading-gallery-indicator"></span>
     </div>
     
     <!-- loading spinner when fetching next page of images -->
     <div class="row d-flex justify-content-center mt-3">
-        <div id="spinner" class="spinner-grow bs-indicator" role="status">
+        <div id="loading-gallery-indicator" class="spinner-grow htmx-indicator spinner" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     </div>
