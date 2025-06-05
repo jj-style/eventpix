@@ -37,10 +37,17 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func
 		cleanup()
 		return nil, nil, err
 	}
-	storageService := service.NewStorageService(dbDB, logger)
+	cache := config.CacheProvider(cfg2)
+	cacheInterface, err := newCache(cache)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	storageService := service.NewStorageService(dbDB, logger, cacheInterface)
 	authService := service.NewAuthService(cfg2, dbDB, htmx)
 	validator := validate.NewValidator()
-	eventpixService := service.NewEventpixService(logger, dbDB, conn, validator)
+	eventpixService := service.NewEventpixService(logger, dbDB, conn, validator, cacheInterface)
 	httpServer := server.NewHttpServer(cfg2, htmx, storageService, authService, eventpixService, dbDB, conn, logger, oauth2Config, validator)
 	cmdServerApp, cleanup3, err := newServerApp(cfg2, logger, conn, httpServer)
 	if err != nil {

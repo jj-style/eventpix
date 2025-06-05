@@ -18,7 +18,7 @@ import (
 )
 
 func initializeServer(cfg *config.Config, logger *zap.Logger) (*serverApp, func(), error) {
-	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newHtmx, db.NewDb, validate.NewValidator, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
+	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newHtmx, newCache, db.NewDb, validate.NewValidator, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
 }
 
 func initializeThumbnailer(cfg *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {

@@ -3,13 +3,23 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"strings"
 	"time"
 
+	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/donseba/go-htmx"
+	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/eko/gocache/lib/v4/store"
+	gocache_store "github.com/eko/gocache/store/go_cache/v4"
+	memcache_store "github.com/eko/gocache/store/memcache/v4"
+	rueidis_store "github.com/eko/gocache/store/rueidis/v4"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/server"
 	"github.com/nats-io/nats.go"
+	go_cache "github.com/patrickmn/go-cache"
+	"github.com/redis/rueidis"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -63,4 +73,39 @@ func newGoogleDriveConfig(cfg *config.Config) (*oauth2.Config, error) {
 		return nil, err
 	}
 	return google.ConfigFromJSON(f, drive.DriveFileScope)
+}
+
+func newCache(cfg *config.Cache) (cache.CacheInterface[[]byte], error) {
+	// TODO(jj) : add cache serializer to encrypt bytes?
+	switch cfg.Mode {
+	case "memory":
+		gocacheClient := go_cache.New(time.Second*time.Duration(cfg.Ttl), 10*time.Minute)
+		gocacheStore := gocache_store.NewGoCache(gocacheClient)
+		cacheManager := cache.New[[]byte](gocacheStore)
+		return cacheManager, nil
+	case "redis":
+		client, err := rueidis.NewClient(rueidis.ClientOption{
+			InitAddress: strings.Split(cfg.Addr, ","),
+			Username:    cfg.Username,
+			Password:    cfg.Password,
+		})
+		if err != nil {
+			return nil, err
+		}
+		cacheManager := cache.New[[]byte](rueidis_store.NewRueidis(
+			client,
+			store.WithExpiration(time.Second*time.Duration(cfg.Ttl)),
+			store.WithClientSideCaching(time.Second*time.Duration(cfg.Ttl))),
+		)
+		return cacheManager, nil
+	case "memcache":
+		memcacheStore := memcache_store.NewMemcache(
+			memcache.New(strings.Split(cfg.Addr, ",")...),
+			store.WithExpiration(time.Second*time.Duration(cfg.Ttl)),
+		)
+		cacheManager := cache.New[[]byte](memcacheStore)
+		return cacheManager, nil
+	default:
+		return nil, fmt.Errorf("unknown cache mode: '%s'", cfg.Mode)
+	}
 }

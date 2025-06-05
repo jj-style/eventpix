@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/jj-style/eventpix/internal/data/db"
 	eventsv1 "github.com/jj-style/eventpix/internal/gen/events/v1"
 	picturev1 "github.com/jj-style/eventpix/internal/gen/picture/v1"
@@ -37,10 +38,11 @@ type eventpixSvc struct {
 	db        db.DB
 	nc        *nats.Conn
 	validator validate.Validator
+	cache     cache.CacheInterface[[]byte]
 }
 
-func NewEventpixService(logger *zap.Logger, db db.DB, nc *nats.Conn, validator validate.Validator) EventpixService {
-	return &eventpixSvc{logger: logger.Sugar(), db: db, nc: nc, validator: validator}
+func NewEventpixService(logger *zap.Logger, db db.DB, nc *nats.Conn, validator validate.Validator, cache cache.CacheInterface[[]byte]) EventpixService {
+	return &eventpixSvc{logger: logger.Sugar(), db: db, nc: nc, validator: validator, cache: cache}
 }
 
 func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picturev1.CreateEventRequest) (*picturev1.CreateEventResponse, error) {
@@ -209,6 +211,11 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 		Video:   mt == eventsv1.NewMedia_VIDEO,
 	}); err != nil {
 		p.logger.Errorf("error storing file info: %w", err)
+		return err
+	}
+
+	// TODO(jj) - src reader will be empty now :(
+	if err := p.cache.Set(ctx, fmt.Sprintf("%d:%s", eventId, filename), nil); err != nil {
 		return err
 	}
 
