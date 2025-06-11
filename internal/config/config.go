@@ -9,6 +9,7 @@ type Config struct {
 	Imagor       *Imagor       `mapstructure:"imagor"`
 	Nats         *Nats         `mapstructure:"nats"`
 	OauthSecrets *OauthSecrets `mapstructure:"oauth"`
+	Cache        *Cache        `mapstructure:"cache"`
 }
 
 type Server struct {
@@ -18,7 +19,6 @@ type Server struct {
 	SecretKey       string `mapstructure:"secretKey"`
 	FormbeeKey      string `mapstructure:"formbeeKey"`
 	SingleEventMode bool   `mapstructure:"singleEventMode"`
-	Cache           *Cache `mapstructure:"cache"`
 }
 
 type Database struct {
@@ -64,7 +64,7 @@ func NatsProvider(cfg *Config) *Nats {
 }
 
 func CacheProvider(cfg *Config) *Cache {
-	return cfg.Server.Cache
+	return cfg.Cache
 }
 
 var Provider = wire.NewSet(DatabaseProvider, NatsProvider, CacheProvider)

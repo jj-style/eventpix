@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -199,6 +200,12 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 		return errors.New("event is not live")
 	}
 
+	// tee read into the cache buf so we don't have to ReadAll
+	// the file contents upfront here, can stream into the storage
+	// then store results of cacheBuf in the cache
+	cacheBuf := bytes.NewBuffer(nil)
+	src = io.TeeReader(src, cacheBuf)
+
 	id, err := evt.Storage.Store(ctx, filename, src)
 	if err != nil {
 		p.logger.Errorf("error storing image: %w", err)
@@ -215,9 +222,8 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 	}
 
 	// TODO(jj) - cache should be optional per event
-	// TODO(jj) - src reader will be empty now :(
-	if err := p.cache.Set(ctx, fmt.Sprintf("%d:%s", eventId, filename), nil); err != nil {
-		return err
+	if err := p.cache.Set(ctx, fmt.Sprintf("%d:%s", eventId, id), cacheBuf.Bytes()); err != nil {
+		p.logger.Warnf("failed to store upload in cache: %s", id)
 	}
 
 	newPhotoMsg := &eventsv1.NewMedia{

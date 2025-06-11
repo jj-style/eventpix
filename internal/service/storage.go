@@ -37,6 +37,14 @@ func (s *storageService) GetThumbnail(ctx context.Context, id string) (string, [
 		return "", nil, err
 	}
 
+	hit, err := s.cache.Get(ctx, fmt.Sprintf("%d:%s", ti.EventID, id))
+	if hit != nil && err == nil {
+		return ti.Name, hit, nil
+	}
+	if err != nil {
+		s.log.Sugar().Warnf("getting thumbnail from cache: %s: %v. will fallback to storage instead", id, err)
+	}
+
 	// get storage from thumbanils event
 	evt, err := s.db.GetEvent(ctx, uint64(ti.EventID))
 	if err != nil {
@@ -56,6 +64,11 @@ func (s *storageService) GetThumbnail(ctx context.Context, id string) (string, [
 		s.log.Sugar().Errorf("error reading data: %v", err)
 		return "", nil, err
 	}
+
+	if err := s.cache.Set(ctx, fmt.Sprintf("%d:%s", ti.EventID, id), buf); err != nil {
+		s.log.Sugar().Warnf("failed to store file in cache: %v", err)
+	}
+
 	return ti.Name, buf, nil
 }
 
@@ -67,11 +80,12 @@ func (s *storageService) GetPicture(ctx context.Context, id string) (string, []b
 		return "", nil, err
 	}
 
-	if hit, err := s.cache.Get(ctx, fmt.Sprintf("%d:%s", fi.EventID, id)); hit != nil && err == nil {
+	hit, err := s.cache.Get(ctx, fmt.Sprintf("%d:%s", fi.EventID, id))
+	if hit != nil && err == nil {
 		return fi.Name, hit, nil
 	}
 	if err != nil {
-		s.log.Sugar().Warnf("getting file from cache: %s: %v. will fallback to storage instead", id, err)
+		s.log.Sugar().Warnf("getting picture from cache: %s: %v. will fallback to storage instead", id, err)
 	}
 
 	// get storage from files event

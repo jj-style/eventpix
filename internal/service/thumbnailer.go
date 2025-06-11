@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	eventsv1 "github.com/jj-style/eventpix/internal/gen/events/v1"
@@ -22,6 +24,7 @@ type Thumbnailer struct {
 	nc        *nats.Conn
 	log       *zap.SugaredLogger
 	serverUrl string
+	cache     cache.CacheInterface[[]byte]
 }
 
 func NewThumbnailer(
@@ -29,13 +32,16 @@ func NewThumbnailer(
 	db db.DB,
 	thumber imagor.Imagor,
 	nc *nats.Conn,
-	log *zap.Logger) (*Thumbnailer, error) {
+	log *zap.Logger,
+	cache cache.CacheInterface[[]byte],
+) (*Thumbnailer, error) {
 	return &Thumbnailer{
 		db:        db,
 		thumber:   thumber,
 		nc:        nc,
 		log:       log.Sugar(),
 		serverUrl: cfg.Server.ServerUrl,
+		cache:     cache,
 	}, nil
 }
 
@@ -94,13 +100,18 @@ func (t *Thumbnailer) Thumb(ctx context.Context, msg *nats.Msg) error {
 		return err
 	}
 	defer thumbnail.Close()
+	cacheBuf := bytes.NewBuffer(nil)
+	thumbTee := io.TeeReader(thumbnail, cacheBuf)
 
 	tname := "thumb_" + strings.TrimRight(fi.Name, filepath.Ext(fi.Name)) + ".webp"
 
-	id, err := evt.Storage.Store(ctx, tname, thumbnail)
+	id, err := evt.Storage.Store(ctx, tname, thumbTee)
 	if err != nil {
 		t.log.Errorf("storing thumbnail: %v", err)
 		return err
+	}
+	if err := t.cache.Set(ctx, fmt.Sprintf("%d:%s", evt.ID, id), cacheBuf.Bytes()); err != nil {
+		t.log.Warnf("failed to store thumbnail in cache: %v", err)
 	}
 	if err := t.db.AddThumbnailInfo(ctx, &db.ThumbnailInfo{
 		ID:         id,
