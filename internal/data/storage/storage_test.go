@@ -59,7 +59,8 @@ func TestStorage(t *testing.T) {
 		"ftp": ftpStore,
 	}
 
-	stores = map[string]storage.Storage{"s3": stores["s3"]}
+	// TODO(jj) remove when test fixed
+	// stores = map[string]storage.Storage{"s3": stores["s3"]}
 
 	for name, store := range stores {
 		t.Run(name+" happy", func(t *testing.T) {
