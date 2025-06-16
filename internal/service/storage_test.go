@@ -38,12 +38,14 @@ func TestStorageService(t *testing.T) {
 				EventID: 1,
 				Name:    filename,
 				ID:      t.Name(),
+				Event:   db.Event{Cache: true},
 			}, nil)
 
 		mdb.EXPECT().
 			GetEvent(ctx, uint64(1)).
 			Return(&db.Event{
 				Storage: mstorage,
+				Cache:   true,
 			}, nil)
 
 		mcache.EXPECT().
@@ -92,12 +94,14 @@ func TestStorageService(t *testing.T) {
 				EventID: 1,
 				Name:    filename,
 				ID:      t.Name(),
+				Event:   db.Event{Cache: true},
 			}, nil)
 
 		mdb.EXPECT().
 			GetEvent(ctx, uint64(1)).
 			Return(&db.Event{
 				Storage: mstorage,
+				Cache:   true,
 			}, nil)
 
 		mcache.EXPECT().

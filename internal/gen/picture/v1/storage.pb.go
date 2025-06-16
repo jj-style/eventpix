@@ -72,6 +72,7 @@ type S3 struct {
 	SecretKey     string                 `protobuf:"bytes,3,opt,name=secret_key,json=secretKey,proto3" json:"secret_key,omitempty"`
 	Region        string                 `protobuf:"bytes,4,opt,name=region,proto3" json:"region,omitempty"`
 	Endpoint      string                 `protobuf:"bytes,5,opt,name=endpoint,proto3" json:"endpoint,omitempty"`
+	Insecure      bool                   `protobuf:"varint,6,opt,name=insecure,proto3" json:"insecure,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -139,6 +140,13 @@ func (x *S3) GetEndpoint() string {
 		return x.Endpoint
 	}
 	return ""
+}
+
+func (x *S3) GetInsecure() bool {
+	if x != nil {
+		return x.Insecure
+	}
+	return false
 }
 
 type GoogleDrive struct {
@@ -261,7 +269,7 @@ const file_picture_v1_storage_proto_rawDesc = "" +
 	"picture.v1\"*\n" +
 	"\n" +
 	"Filesystem\x12\x1c\n" +
-	"\tdirectory\x18\x01 \x01(\tR\tdirectory\"\x8e\x01\n" +
+	"\tdirectory\x18\x01 \x01(\tR\tdirectory\"\xaa\x01\n" +
 	"\x02S3\x12\x16\n" +
 	"\x06bucket\x18\x01 \x01(\tR\x06bucket\x12\x1d\n" +
 	"\n" +
@@ -269,7 +277,8 @@ const file_picture_v1_storage_proto_rawDesc = "" +
 	"\n" +
 	"secret_key\x18\x03 \x01(\tR\tsecretKey\x12\x16\n" +
 	"\x06region\x18\x04 \x01(\tR\x06region\x12\x1a\n" +
-	"\bendpoint\x18\x05 \x01(\tR\bendpoint\"*\n" +
+	"\bendpoint\x18\x05 \x01(\tR\bendpoint\x12\x1a\n" +
+	"\binsecure\x18\x06 \x01(\bR\binsecure\"*\n" +
 	"\vGoogleDrive\x12\x1b\n" +
 	"\tfolder_id\x18\x01 \x01(\tR\bfolderId\"u\n" +
 	"\x03Ftp\x12\x18\n" +

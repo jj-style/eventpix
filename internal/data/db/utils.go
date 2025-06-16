@@ -24,6 +24,7 @@ func ExtractEventStorage(evt *Event, googleOauthConfig *oauth2.Config) error {
 			SecretKey: st.SecretKey.Raw.(string),
 			Bucket:    st.Bucket,
 			Endpoint:  st.Endpoint,
+			Insecure:  st.Insecure,
 		})
 	} else if st := evt.GoogleDriveStorage; st != nil {
 		var token oauth2.Token

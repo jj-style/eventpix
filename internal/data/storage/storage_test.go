@@ -50,17 +50,18 @@ func TestStorage(t *testing.T) {
 		"memory":     storage.NewMemStore(),
 		"filesystem": storage.NewFilesystem(afero.NewMemMapFs(), "/store"),
 		"s3": storage.NewS3Store(&storage.S3Config{
-			Endpoint:  s3Conn,
+			Endpoint:  strings.TrimLeft(s3Conn, "https://"),
 			Region:    "us-east-1",
 			AccessKey: s3Username,
 			SecretKey: s3Password,
 			Bucket:    "test",
+			Insecure:  true,
 		}),
 		"ftp": ftpStore,
 	}
 
 	// TODO(jj) remove when test fixed
-	// stores = map[string]storage.Storage{"s3": stores["s3"]}
+	stores = map[string]storage.Storage{"s3": stores["s3"]}
 
 	for name, store := range stores {
 		t.Run(name+" happy", func(t *testing.T) {

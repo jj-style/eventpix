@@ -72,6 +72,7 @@ type S3Storage struct {
 	Bucket    string
 	Endpoint  string
 	EventID   uint
+	Insecure  bool
 }
 
 type GoogleDriveStorage struct {
