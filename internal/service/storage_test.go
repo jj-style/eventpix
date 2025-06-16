@@ -7,6 +7,7 @@ import (
 	"io"
 	"testing"
 
+	mockCache "github.com/jj-style/eventpix/internal/cache/mocks"
 	"github.com/jj-style/eventpix/internal/data/db"
 	mdb "github.com/jj-style/eventpix/internal/data/db/mocks"
 	mstorage "github.com/jj-style/eventpix/internal/data/storage/mocks"
@@ -22,7 +23,8 @@ func TestStorageService(t *testing.T) {
 
 	mdb := mdb.NewMockDB(t)
 	mstorage := mstorage.NewMockStorage(t)
-	svc := service.NewStorageService(mdb, zap.NewNop())
+	mcache := mockCache.NewMockCache(t)
+	svc := service.NewStorageService(mdb, zap.NewNop(), mcache)
 
 	t.Run("happy get picture", func(t *testing.T) {
 		t.Parallel()
@@ -44,9 +46,17 @@ func TestStorageService(t *testing.T) {
 				Storage: mstorage,
 			}, nil)
 
+		mcache.EXPECT().
+			Get(ctx, "1:"+t.Name()).
+			Return(nil, nil)
+
 		mstorage.EXPECT().
 			Get(ctx, t.Name()).
 			Return(io.NopCloser(bytes.NewReader([]byte("data"))), nil)
+
+		mcache.EXPECT().
+			Set(ctx, "1:"+t.Name(), []byte("data")).
+			Return(nil)
 
 		gotName, gotData, err := svc.GetPicture(ctx, t.Name())
 
@@ -90,9 +100,17 @@ func TestStorageService(t *testing.T) {
 				Storage: mstorage,
 			}, nil)
 
+		mcache.EXPECT().
+			Get(ctx, "1:"+t.Name()).
+			Return(nil, nil)
+
 		mstorage.EXPECT().
 			Get(ctx, t.Name()).
 			Return(io.NopCloser(bytes.NewReader([]byte("data"))), nil)
+
+		mcache.EXPECT().
+			Set(ctx, "1:"+t.Name(), []byte("data")).
+			Return(nil)
 
 		gotName, gotData, err := svc.GetThumbnail(ctx, t.Name())
 

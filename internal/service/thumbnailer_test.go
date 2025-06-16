@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	mockCache "github.com/jj-style/eventpix/internal/cache/mocks"
 	"github.com/jj-style/eventpix/internal/config"
 	db "github.com/jj-style/eventpix/internal/data/db"
 	mockdb "github.com/jj-style/eventpix/internal/data/db/mocks"
@@ -54,13 +55,15 @@ func TestThumbnailer(t *testing.T) {
 	mdb := mockdb.NewMockDB(t)
 	mstorage := mockStorage.NewMockStorage(t)
 	mimg := mockImagor.NewMockImagor(t)
+	mcache := mockCache.NewMockCache(t)
 
 	thumber, err := service.NewThumbnailer(
 		&config.Config{Server: &config.Server{ServerUrl: "http://example.com"}},
 		mdb,
 		mimg,
 		nc,
-		zap.NewNop())
+		zap.NewNop(),
+		mcache)
 	is.NoError(err)
 
 	go thumber.Start(ctx)
@@ -95,8 +98,18 @@ func TestThumbnailer(t *testing.T) {
 
 	// store thumbnail
 	mstorage.EXPECT().
-		Store(mock.Anything, "thumb_file.webp", mockThumbnailData).
-		Return("abc", nil)
+		Store(mock.Anything, "thumb_file.webp", mock.Anything).
+		RunAndReturn(func(ctx context.Context, s string, r io.Reader) (string, error) {
+			// kinda testing implementation here but tee-reader gets the data into the
+			// buffer for the cache set below
+			_, _ = io.ReadAll(r)
+			return "abc", nil
+		})
+
+	// and in cache
+	mcache.EXPECT().
+		Set(mock.Anything, "0:abc", []byte("thumbnail file")).
+		Return(nil)
 
 	// act
 	msg := &eventsv1.NewMedia{FileId: "abc", EventId: uint64(1), Type: eventsv1.NewMedia_IMAGE}

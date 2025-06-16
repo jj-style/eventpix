@@ -7,6 +7,7 @@ package cmd
 
 import (
 	"github.com/google/wire"
+	"github.com/jj-style/eventpix/internal/cache"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	"github.com/jj-style/eventpix/internal/pkg/imagor"
@@ -18,13 +19,13 @@ import (
 )
 
 func initializeServer(cfg *config.Config, logger *zap.Logger) (*serverApp, func(), error) {
-	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newHtmx, db.NewDb, validate.NewValidator, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
+	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newHtmx, newCache, db.NewDb, validate.NewValidator, service.NewEventpixService, service.NewStorageService, service.NewAuthService, server.NewHttpServer, newServerApp))
 }
 
 func initializeThumbnailer(cfg *config.Config, logger *zap.Logger) (*service.Thumbnailer, func(), error) {
-	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
+	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newCache, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
 }
 
-func initializeThumbnailerWithNats(cfg *config.Config, logger *zap.Logger, nc *nats.Conn) (*service.Thumbnailer, func(), error) {
+func initializeThumbnailerInProc(cfg *config.Config, logger *zap.Logger, nc *nats.Conn, cache cache.Cache) (*service.Thumbnailer, func(), error) {
 	panic(wire.Build(config.Provider, newGoogleDriveConfig, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
 }

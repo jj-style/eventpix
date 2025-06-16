@@ -9,6 +9,7 @@ type Config struct {
 	Imagor       *Imagor       `mapstructure:"imagor"`
 	Nats         *Nats         `mapstructure:"nats"`
 	OauthSecrets *OauthSecrets `mapstructure:"oauth"`
+	Cache        *Cache        `mapstructure:"cache"`
 }
 
 type Server struct {
@@ -29,6 +30,15 @@ type Database struct {
 type Nats struct {
 	Url       string `mapstructure:"url"`
 	InProcess bool   `mapstructure:"inProcess"`
+}
+
+type Cache struct {
+	Mode string `mapstructure:"mode"`
+	// Address(es) (comma-separated) of server(s)
+	Addr     string `mapstructure:"uri"`
+	Username string
+	Password string
+	Ttl      int64 `mapstructure:"ttl"`
 }
 
 type Imagor struct {
@@ -53,4 +63,8 @@ func NatsProvider(cfg *Config) *Nats {
 	return cfg.Nats
 }
 
-var Provider = wire.NewSet(DatabaseProvider, NatsProvider)
+func CacheProvider(cfg *Config) *Cache {
+	return cfg.Cache
+}
+
+var Provider = wire.NewSet(DatabaseProvider, NatsProvider, CacheProvider)

@@ -1,12 +1,14 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 
+	"github.com/jj-style/eventpix/internal/cache"
 	"github.com/jj-style/eventpix/internal/data/db"
 	eventsv1 "github.com/jj-style/eventpix/internal/gen/events/v1"
 	picturev1 "github.com/jj-style/eventpix/internal/gen/picture/v1"
@@ -37,10 +39,11 @@ type eventpixSvc struct {
 	db        db.DB
 	nc        *nats.Conn
 	validator validate.Validator
+	cache     cache.Cache
 }
 
-func NewEventpixService(logger *zap.Logger, db db.DB, nc *nats.Conn, validator validate.Validator) EventpixService {
-	return &eventpixSvc{logger: logger.Sugar(), db: db, nc: nc, validator: validator}
+func NewEventpixService(logger *zap.Logger, db db.DB, nc *nats.Conn, validator validate.Validator, cache cache.Cache) EventpixService {
+	return &eventpixSvc{logger: logger.Sugar(), db: db, nc: nc, validator: validator, cache: cache}
 }
 
 func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picturev1.CreateEventRequest) (*picturev1.CreateEventResponse, error) {
@@ -48,6 +51,7 @@ func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picture
 		Name:   req.GetName(),
 		Slug:   req.GetSlug(),
 		Live:   req.GetLive(),
+		Cache:  req.GetCache(),
 		UserID: userId,
 	}
 	if pwd := req.GetPassword(); pwd != "" {
@@ -197,6 +201,14 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 		return errors.New("event is not live")
 	}
 
+	// tee read into the cache buf so we don't have to ReadAll
+	// the file contents upfront here, can stream into the storage
+	// then store results of cacheBuf in the cache
+	cacheBuf := bytes.NewBuffer(nil)
+	if evt.Cache {
+		src = io.TeeReader(src, cacheBuf)
+	}
+
 	id, err := evt.Storage.Store(ctx, filename, src)
 	if err != nil {
 		p.logger.Errorf("error storing image: %w", err)
@@ -210,6 +222,12 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 	}); err != nil {
 		p.logger.Errorf("error storing file info: %w", err)
 		return err
+	}
+
+	if evt.Cache {
+		if err := p.cache.Set(ctx, fmt.Sprintf("%d:%s", eventId, id), cacheBuf.Bytes()); err != nil {
+			p.logger.Warnf("failed to store upload in cache: %s", id)
+		}
 	}
 
 	newPhotoMsg := &eventsv1.NewMedia{

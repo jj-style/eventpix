@@ -20,3 +20,9 @@ nats:
   url: "127.0.0.1:4222"
 imagor:
   url: http://localhost:8000
+cache:
+  ttl: 3600
+  mode: redis
+  uri: "127.0.0.1:6379"
+  # mode: memcache
+  # uri: "127.0.0.1:11211"

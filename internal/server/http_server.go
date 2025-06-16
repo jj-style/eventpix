@@ -57,7 +57,11 @@ func NewHttpServer(
 	authGroup.GET("/logout", authRequired, authService.Logout)
 
 	// serve static assets (html/css/js/images)
-	r.StaticFS("/static", static.EmbedFolder(staticFs, "assets/static"))
+	staticFsEmbed, err := static.EmbedFolder(staticFs, "assets/static")
+	if err != nil {
+		logger.Sugar().Fatal(err)
+	}
+	r.StaticFS("/static", staticFsEmbed)
 
 	// htmx ui / api
 	handleUi(r, htmx, db, eventpixSvc, nc, cfg, validator)
