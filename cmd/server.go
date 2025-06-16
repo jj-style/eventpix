@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/jj-style/eventpix/internal/cache"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/service"
 	"github.com/nats-io/nats.go"
@@ -32,7 +32,7 @@ type serverApp struct {
 
 // builds the final app to run for the server command.
 // This handles running an in-memory nats server and thumbnailer based on the config
-func newServerApp(cfg *config.Config, logger *zap.Logger, nc *nats.Conn, srv *http.Server, cache cache.CacheInterface[[]byte]) (*serverApp, func(), error) {
+func newServerApp(cfg *config.Config, logger *zap.Logger, nc *nats.Conn, srv *http.Server, cache cache.Cache) (*serverApp, func(), error) {
 	app := &serverApp{
 		server:      srv,
 		thumbnailer: nil,

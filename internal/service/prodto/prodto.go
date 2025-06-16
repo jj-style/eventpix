@@ -13,6 +13,7 @@ func Event(e *db.Event, withFileInfos bool) *picturev1.Event {
 		Name:   e.Name,
 		Live:   e.Live,
 		Active: e.Active,
+		Cache:  e.Cache,
 	}
 	if withFileInfos {
 		ret.FileInfos = &picturev1.FileInfosValue{

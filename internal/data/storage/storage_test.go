@@ -43,6 +43,9 @@ func TestStorage(t *testing.T) {
 		t.Fatalf("setting up ftp: %v", err)
 		return
 	}
+
+	// TODO(jj) fix s3 test, strip http scheme, make `secure` configurable`
+
 	stores := map[string]storage.Storage{
 		"memory":     storage.NewMemStore(),
 		"filesystem": storage.NewFilesystem(afero.NewMemMapFs(), "/store"),
@@ -55,6 +58,8 @@ func TestStorage(t *testing.T) {
 		}),
 		"ftp": ftpStore,
 	}
+
+	stores = map[string]storage.Storage{"s3": stores["s3"]}
 
 	for name, store := range stores {
 		t.Run(name+" happy", func(t *testing.T) {

@@ -9,9 +9,11 @@ import (
 
 type Event struct {
 	gorm.Model
-	Name           string
-	Slug           string `gorm:"uniqueIndex"`
-	Live           bool
+	Name string
+	Slug string `gorm:"uniqueIndex"`
+	Live bool
+	// whether or not to cache media stored in the event
+	Cache          bool
 	FileInfos      []FileInfo
 	ThumbnailInfos []ThumbnailInfo
 	UserID         uint

@@ -46,7 +46,9 @@ type Event struct {
 	// Whether the event is active
 	Active bool `protobuf:"varint,8,opt,name=active,proto3" json:"active,omitempty"`
 	// Password of the event
-	Password      *wrapperspb.StringValue `protobuf:"bytes,9,opt,name=password,proto3" json:"password,omitempty"`
+	Password *wrapperspb.StringValue `protobuf:"bytes,9,opt,name=password,proto3" json:"password,omitempty"`
+	// Whether media is cached for the event
+	Cache         bool `protobuf:"varint,11,opt,name=cache,proto3" json:"cache,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -164,6 +166,13 @@ func (x *Event) GetPassword() *wrapperspb.StringValue {
 		return x.Password
 	}
 	return nil
+}
+
+func (x *Event) GetCache() bool {
+	if x != nil {
+		return x.Cache
+	}
+	return false
 }
 
 type isEvent_Storage interface {
@@ -331,7 +340,9 @@ type CreateEventRequest struct {
 	//	*CreateEventRequest_Ftp
 	Storage isCreateEventRequest_Storage `protobuf_oneof:"storage"`
 	// Password of the event
-	Password      string `protobuf:"bytes,7,opt,name=password,proto3" json:"password,omitempty"`
+	Password string `protobuf:"bytes,7,opt,name=password,proto3" json:"password,omitempty"`
+	// Whether to cache media in the event
+	Cache         bool `protobuf:"varint,9,opt,name=cache,proto3" json:"cache,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -435,6 +446,13 @@ func (x *CreateEventRequest) GetPassword() string {
 		return x.Password
 	}
 	return ""
+}
+
+func (x *CreateEventRequest) GetCache() bool {
+	if x != nil {
+		return x.Cache
+	}
+	return false
 }
 
 type isCreateEventRequest_Storage interface {
@@ -1277,7 +1295,7 @@ var File_picture_v1_picture_proto protoreflect.FileDescriptor
 const file_picture_v1_picture_proto_rawDesc = "" +
 	"\n" +
 	"\x18picture/v1/picture.proto\x12\n" +
-	"picture.v1\x1a\x18picture/v1/storage.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1bgoogle/protobuf/empty.proto\"\x95\x03\n" +
+	"picture.v1\x1a\x18picture/v1/storage.proto\x1a\x1egoogle/protobuf/wrappers.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xab\x03\n" +
 	"\x05Event\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
@@ -1292,7 +1310,8 @@ const file_picture_v1_picture_proto_rawDesc = "" +
 	"\x03ftp\x18\n" +
 	" \x01(\v2\x0f.picture.v1.FtpH\x00R\x03ftp\x12\x16\n" +
 	"\x06active\x18\b \x01(\bR\x06active\x128\n" +
-	"\bpassword\x18\t \x01(\v2\x1c.google.protobuf.StringValueR\bpasswordB\t\n" +
+	"\bpassword\x18\t \x01(\v2\x1c.google.protobuf.StringValueR\bpassword\x12\x14\n" +
+	"\x05cache\x18\v \x01(\bR\x05cacheB\t\n" +
 	"\astorage\"<\n" +
 	"\x0eFileInfosValue\x12*\n" +
 	"\x05value\x18\x01 \x03(\v2\x14.picture.v1.FileInfoR\x05value\"_\n" +
@@ -1300,7 +1319,7 @@ const file_picture_v1_picture_proto_rawDesc = "" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
 	"\x05video\x18\x03 \x01(\bR\x05video\x12\x19\n" +
-	"\bevent_id\x18\x04 \x01(\x04R\aeventId\"\xb5\x02\n" +
+	"\bevent_id\x18\x04 \x01(\x04R\aeventId\"\xcb\x02\n" +
 	"\x12CreateEventRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x12\n" +
@@ -1311,7 +1330,8 @@ const file_picture_v1_picture_proto_rawDesc = "" +
 	"\x02s3\x18\x05 \x01(\v2\x0e.picture.v1.S3H\x00R\x02s3\x12;\n" +
 	"\vgoogleDrive\x18\x06 \x01(\v2\x17.picture.v1.GoogleDriveH\x00R\vgoogleDrive\x12#\n" +
 	"\x03ftp\x18\b \x01(\v2\x0f.picture.v1.FtpH\x00R\x03ftp\x12\x1a\n" +
-	"\bpassword\x18\a \x01(\tR\bpasswordB\t\n" +
+	"\bpassword\x18\a \x01(\tR\bpassword\x12\x14\n" +
+	"\x05cache\x18\t \x01(\bR\x05cacheB\t\n" +
 	"\astorage\"%\n" +
 	"\x13CreateEventResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\"\x12\n" +

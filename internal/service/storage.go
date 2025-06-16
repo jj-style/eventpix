@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/jj-style/eventpix/internal/cache"
 	"github.com/jj-style/eventpix/internal/data/db"
 	"go.uber.org/zap"
 )
@@ -15,7 +15,7 @@ type StorageService interface {
 	GetPicture(ctx context.Context, id string) (string, []byte, error)
 }
 
-func NewStorageService(db db.DB, log *zap.Logger, cache cache.CacheInterface[[]byte]) StorageService {
+func NewStorageService(db db.DB, log *zap.Logger, cache cache.Cache) StorageService {
 	return &storageService{
 		db:    db,
 		log:   log,
@@ -26,7 +26,7 @@ func NewStorageService(db db.DB, log *zap.Logger, cache cache.CacheInterface[[]b
 type storageService struct {
 	db    db.DB
 	log   *zap.Logger
-	cache cache.CacheInterface[[]byte]
+	cache cache.Cache
 }
 
 func (s *storageService) GetThumbnail(ctx context.Context, id string) (string, []byte, error) {
@@ -37,12 +37,14 @@ func (s *storageService) GetThumbnail(ctx context.Context, id string) (string, [
 		return "", nil, err
 	}
 
-	hit, err := s.cache.Get(ctx, fmt.Sprintf("%d:%s", ti.EventID, id))
-	if hit != nil && err == nil {
-		return ti.Name, hit, nil
-	}
-	if err != nil {
-		s.log.Sugar().Warnf("getting thumbnail from cache: %s: %v. will fallback to storage instead", id, err)
+	if ti.Event.Cache {
+		hit, err := s.cache.Get(ctx, fmt.Sprintf("%d:%s", ti.EventID, id))
+		if hit != nil && err == nil {
+			return ti.Name, hit, nil
+		}
+		if err != nil {
+			s.log.Sugar().Warnf("getting thumbnail from cache: %s: %v. will fallback to storage instead", id, err)
+		}
 	}
 
 	// get storage from thumbanils event
@@ -65,8 +67,10 @@ func (s *storageService) GetThumbnail(ctx context.Context, id string) (string, [
 		return "", nil, err
 	}
 
-	if err := s.cache.Set(ctx, fmt.Sprintf("%d:%s", ti.EventID, id), buf); err != nil {
-		s.log.Sugar().Warnf("failed to store file in cache: %v", err)
+	if ti.Event.Cache {
+		if err := s.cache.Set(ctx, fmt.Sprintf("%d:%s", ti.EventID, id), buf); err != nil {
+			s.log.Sugar().Warnf("failed to store file in cache: %v", err)
+		}
 	}
 
 	return ti.Name, buf, nil
@@ -80,12 +84,14 @@ func (s *storageService) GetPicture(ctx context.Context, id string) (string, []b
 		return "", nil, err
 	}
 
-	hit, err := s.cache.Get(ctx, fmt.Sprintf("%d:%s", fi.EventID, id))
-	if hit != nil && err == nil {
-		return fi.Name, hit, nil
-	}
-	if err != nil {
-		s.log.Sugar().Warnf("getting picture from cache: %s: %v. will fallback to storage instead", id, err)
+	if fi.Event.Cache {
+		hit, err := s.cache.Get(ctx, fmt.Sprintf("%d:%s", fi.EventID, id))
+		if hit != nil && err == nil {
+			return fi.Name, hit, nil
+		}
+		if err != nil {
+			s.log.Sugar().Warnf("getting picture from cache: %s: %v. will fallback to storage instead", id, err)
+		}
 	}
 
 	// get storage from files event
@@ -108,10 +114,12 @@ func (s *storageService) GetPicture(ctx context.Context, id string) (string, []b
 		return "", nil, err
 	}
 
-	// don't want to error if we don't store in the cache as we still
-	// have the data and next time it will just fetch again, no biggie
-	if err := s.cache.Set(ctx, fmt.Sprintf("%d:%s", fi.EventID, id), buf); err != nil {
-		s.log.Sugar().Warnf("failed to store file %s in the cache: %v", id, err)
+	if fi.Event.Cache {
+		// don't want to error if we don't store in the cache as we still
+		// have the data and next time it will just fetch again, no biggie
+		if err := s.cache.Set(ctx, fmt.Sprintf("%d:%s", fi.EventID, id), buf); err != nil {
+			s.log.Sugar().Warnf("failed to store file %s in the cache: %v", id, err)
+		}
 	}
 	return fi.Name, buf, nil
 }

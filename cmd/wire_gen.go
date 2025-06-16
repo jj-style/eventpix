@@ -7,7 +7,7 @@
 package cmd
 
 import (
-	"github.com/eko/gocache/lib/v4/cache"
+	"github.com/jj-style/eventpix/internal/cache"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	"github.com/jj-style/eventpix/internal/pkg/imagor"
@@ -39,18 +39,18 @@ func initializeServer(cfg2 *config.Config, logger *zap.Logger) (*serverApp, func
 		return nil, nil, err
 	}
 	cache := config.CacheProvider(cfg2)
-	cacheInterface, err := newCache(cache)
+	cacheCache, err := newCache(cache)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	storageService := service.NewStorageService(dbDB, logger, cacheInterface)
+	storageService := service.NewStorageService(dbDB, logger, cacheCache)
 	authService := service.NewAuthService(cfg2, dbDB, htmx)
 	validator := validate.NewValidator()
-	eventpixService := service.NewEventpixService(logger, dbDB, conn, validator, cacheInterface)
+	eventpixService := service.NewEventpixService(logger, dbDB, conn, validator, cacheCache)
 	httpServer := server.NewHttpServer(cfg2, htmx, storageService, authService, eventpixService, dbDB, conn, logger, oauth2Config, validator)
-	cmdServerApp, cleanup3, err := newServerApp(cfg2, logger, conn, httpServer, cacheInterface)
+	cmdServerApp, cleanup3, err := newServerApp(cfg2, logger, conn, httpServer, cacheCache)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -81,13 +81,13 @@ func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Th
 		return nil, nil, err
 	}
 	cache := config.CacheProvider(cfg2)
-	cacheInterface, err := newCache(cache)
+	cacheCache, err := newCache(cache)
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	thumbnailer, err := service.NewThumbnailer(cfg2, dbDB, imagorImagor, conn, logger, cacheInterface)
+	thumbnailer, err := service.NewThumbnailer(cfg2, dbDB, imagorImagor, conn, logger, cacheCache)
 	if err != nil {
 		cleanup2()
 		cleanup()
@@ -99,7 +99,7 @@ func initializeThumbnailer(cfg2 *config.Config, logger *zap.Logger) (*service.Th
 	}, nil
 }
 
-func initializeThumbnailerInProc(cfg2 *config.Config, logger *zap.Logger, nc *nats.Conn, cache2 cache.CacheInterface[[]byte]) (*service.Thumbnailer, func(), error) {
+func initializeThumbnailerInProc(cfg2 *config.Config, logger *zap.Logger, nc *nats.Conn, cache2 cache.Cache) (*service.Thumbnailer, func(), error) {
 	database := config.DatabaseProvider(cfg2)
 	oauth2Config, err := newGoogleDriveConfig(cfg2)
 	if err != nil {

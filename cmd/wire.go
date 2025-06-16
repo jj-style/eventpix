@@ -6,8 +6,8 @@
 package cmd
 
 import (
-	"github.com/eko/gocache/lib/v4/cache"
 	"github.com/google/wire"
+	"github.com/jj-style/eventpix/internal/cache"
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/data/db"
 	"github.com/jj-style/eventpix/internal/pkg/imagor"
@@ -26,6 +26,6 @@ func initializeThumbnailer(cfg *config.Config, logger *zap.Logger) (*service.Thu
 	panic(wire.Build(config.Provider, newGoogleDriveConfig, newNats, newCache, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
 }
 
-func initializeThumbnailerInProc(cfg *config.Config, logger *zap.Logger, nc *nats.Conn, cache cache.CacheInterface[[]byte]) (*service.Thumbnailer, func(), error) {
+func initializeThumbnailerInProc(cfg *config.Config, logger *zap.Logger, nc *nats.Conn, cache cache.Cache) (*service.Thumbnailer, func(), error) {
 	panic(wire.Build(config.Provider, newGoogleDriveConfig, db.NewDb, imagor.NewImagor, service.NewThumbnailer))
 }

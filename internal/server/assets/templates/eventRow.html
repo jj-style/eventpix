@@ -11,6 +11,9 @@
         type="checkbox"
         {{$checked}}>
 </td>
+<td>
+    {{ if .event.Cache }}<i class="bi bi-check-lg"></i>{{ else }}<i class="bi bi-x-lg"></i>{{ end }}
+</td>
 {{ if .config.SingleEventMode }}
 <td>
     {{ if .event.Active }}

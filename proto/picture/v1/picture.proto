@@ -39,6 +39,8 @@ message Event {
     bool active = 8;
     // Password of the event
     google.protobuf.StringValue password = 9;
+    // Whether media is cached for the event
+    bool cache = 11;
 }
 
 // Wrapper around a list of FileInfo
@@ -75,6 +77,8 @@ message CreateEventRequest {
     }
     // Password of the event
     string password = 7;
+    // Whether to cache media in the event
+    bool cache = 9;
 }
 
 // Response from successfully creating an event
