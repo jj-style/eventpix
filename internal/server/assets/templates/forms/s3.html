@@ -21,6 +21,16 @@
 </div>
 <div class="form-group">
     <label for="endpoint" class="form-label">Endpoint</label>
-    <input type="url" class="form-control" name="s3[endpoint]" placeholder="my.s3.com:9000" aria-label="Endpoint">
-    <small id="endpointHelp" class="form-text text-muted">Optionally set custom s3 endpoint. Defaults to AWS otherwise.</small>
+    <input type="text" class="form-control" name="s3[endpoint]" placeholder="my.s3.com:9000" aria-label="Endpoint" required>
+</div>
+<div class="form-group">
+  <div class="form-check">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      id="insecureCheckbox"
+      name="s3[insecure]"
+    />
+    <label class="form-check-label" for="insecureCheckbox"> Insecure </label>
+  </div>
 </div>

@@ -12,6 +12,7 @@ message S3 {
     string secret_key = 3;
     string region     = 4;
     string endpoint   = 5;
+    bool   insecure   = 6;
 }
 
 message GoogleDrive {

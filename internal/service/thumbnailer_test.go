@@ -72,6 +72,7 @@ func TestThumbnailer(t *testing.T) {
 	// get event with events mock storage
 	mdb.EXPECT().GetEvent(mock.Anything, uint64(1)).Return(&db.Event{
 		Storage: mstorage,
+		Cache:   true,
 	}, nil)
 
 	// retrieve the file info

@@ -17,18 +17,25 @@ type s3Store struct {
 func (s *s3Store) Get(ctx context.Context, name string) (io.ReadCloser, error) {
 	file, err := s.s3.GetObject(ctx, s.bucket, name, minio.GetObjectOptions{})
 	if err != nil {
-		if err.Error() == "status code: 404 Not Found" {
+		return nil, err
+	}
+	if _, err := file.Stat(); err != nil {
+		if err.Error() == "The specified key does not exist." {
 			return nil, ErrFileNotFound
 		}
 		return nil, err
 	}
+
 	return file, nil
 }
 
 func (s *s3Store) Store(ctx context.Context, name string, file io.Reader) (string, error) {
 	id := uuid.NewString()
 	_, err := s.s3.PutObject(ctx, s.bucket, id, file, -1, minio.PutObjectOptions{})
-	return id, err
+	if err != nil {
+		return "", err
+	}
+	return id, nil
 }
 
 type S3Config struct {
@@ -37,12 +44,13 @@ type S3Config struct {
 	SecretKey string
 	Bucket    string
 	Endpoint  string
+	Insecure  bool
 }
 
 func NewS3Store(cfg *S3Config) Storage {
 	minioClient, err := minio.New(cfg.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(cfg.AccessKey, cfg.SecretKey, ""),
-		Secure: true,
+		Secure: !cfg.Insecure,
 	})
 	if err != nil {
 		panic(err)

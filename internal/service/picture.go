@@ -69,6 +69,7 @@ func (p *eventpixSvc) CreateEvent(ctx context.Context, userId uint, req *picture
 			SecretKey: gormcrypto.EncryptedValue{Raw: st.S3.GetSecretKey()},
 			Region:    st.S3.GetRegion(),
 			Endpoint:  st.S3.GetEndpoint(),
+			Insecure:  st.S3.GetInsecure(),
 		}
 	case *picturev1.CreateEventRequest_GoogleDrive:
 		createEvent.GoogleDriveStorage = &db.GoogleDriveStorage{
