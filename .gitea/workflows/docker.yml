@@ -15,7 +15,7 @@ jobs:
         with:
           registry: ${{ env.registry }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITEA_TOKEN }}
+          password: ${{ secrets.CI_PACKAGE_WRITE }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
