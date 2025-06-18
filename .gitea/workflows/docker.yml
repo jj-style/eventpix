@@ -10,13 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      # - name: Login to GitHub Container Registry
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ghcr.io
-      #     username: ${{ github.repository_owner }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.registry }}
+          username: ${{ env.actions_user }}
+          password: ${{ secrets.GITEA_TOKEN }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       
@@ -29,4 +29,4 @@ jobs:
           context: .
           file: docker/Dockerfile
           push: true
-          tags: user/app:latest
+          tags: ${{ env.registry }}/${{ gitea.repository }}:latest
