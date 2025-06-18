@@ -13,7 +13,7 @@ jobs:
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          registry: https://git.home.jjstyle.dev
+          registry: http://gitea:3000
           username: ${{ github.actor }}
           password: ${{ secrets.CI_PACKAGE_WRITE }}
 
