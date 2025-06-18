@@ -14,7 +14,10 @@ generate:
 
 build version=__git_version:
     @mkdir -p bin
-    go build -ldflags="-X '{{__cmd_module}}.Version={{version}}'" -o bin/eventpix main.go 
+    CGO_ENABLED=1 go build -ldflags="-w -X '{{__cmd_module}}.Version={{version}}'" -trimpath -o bin/eventpix main.go 
+
+docker-build version=__git_version:
+    docker build . -t eventpix -f docker/Dockerfile --build-arg VERSION={{version}}
 
 test *flags:
     go test -cover {{flags}} $(go list ./... | grep -v mocks)
