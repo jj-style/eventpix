@@ -40,7 +40,7 @@ func NewThumbnailer(
 		thumber:   thumber,
 		nc:        nc,
 		log:       log.Sugar(),
-		serverUrl: cfg.Server.ServerUrl,
+		serverUrl: cfg.Server.InternalServerUrl,
 		cache:     cache,
 	}, nil
 }

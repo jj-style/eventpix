@@ -58,7 +58,7 @@ func TestThumbnailer(t *testing.T) {
 	mcache := mockCache.NewMockCache(t)
 
 	thumber, err := service.NewThumbnailer(
-		&config.Config{Server: &config.Server{ServerUrl: "http://example.com"}},
+		&config.Config{Server: &config.Server{InternalServerUrl: "http://example.com"}},
 		mdb,
 		mimg,
 		nc,
