@@ -61,7 +61,9 @@ func NewDb(cfg *config.Database, logger *zap.Logger, googleOauthConfig *oauth2.C
 		return nil, func() {}, fmt.Errorf("unsupported db driver: %s", cfg.Driver)
 	}
 
-	db, err := gorm.Open(dialector, &gorm.Config{})
+	db, err := gorm.Open(dialector, &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		return nil, func() {}, fmt.Errorf("opening database: %w", err)
 	}

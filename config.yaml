@@ -13,16 +13,19 @@ oauth:
 database:
   driver: sqlite
   uri: ./scratch/test.db
+  # driver: mysql
+  # uri: dbuser:dbpwd@tcp(127.0.0.1:3306)/eventpix
   encryptionKey: A/vDd4Jk3fF8dgrjhkVf2qA950jSFw+wwzAqsWEHQqo=
   # uri: file::memory:?cache=shared
 nats:
-  inProcess: false
+  inProcess: true
   url: "127.0.0.1:4222"
 imagor:
   url: http://localhost:8000
 cache:
-  ttl: 3600
-  mode: redis
-  uri: "127.0.0.1:6379"
+  mode: memory
+  # ttl: 3600
+  # mode: redis
+  # uri: "127.0.0.1:6379"
   # mode: memcache
   # uri: "127.0.0.1:11211"
