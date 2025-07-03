@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/jj-style/eventpix/internal/config"
 	"github.com/jj-style/eventpix/internal/pkg/utils/auth"
@@ -96,10 +97,14 @@ func NewDb(cfg *config.Database, logger *zap.Logger, googleOauthConfig *oauth2.C
 
 	// create initial admin user
 	var admin User
+	defaultAdminPwd := "admin"
+	if newPwd := os.Getenv("EVENTPIX_ADMIN_PASSWORD"); newPwd != "" {
+		defaultAdminPwd = newPwd
+	}
 	db.Where(User{Admin: true}).
 		Attrs(User{
 			Username: "admin",
-			Password: string(lo.Must(auth.EncryptPassword("admin"))),
+			Password: string(lo.Must(auth.EncryptPassword(defaultAdminPwd))),
 		}).
 		FirstOrCreate(&admin)
 
