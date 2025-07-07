@@ -1,0 +1,79 @@
+services:
+
+  caddy:
+    image: caddy
+    container_name: caddy
+    ports:
+      - 443:443
+    restart: unless-stopped
+    volumes:
+      - ./data/caddy/conf:/etc/caddy
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
+
+  server:
+    image: jjstyle0/eventpix:latest
+    container_name: server
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      # if storing events media locally on filesystem
+      - ./data/server:/data/
+      # downloaded from google cloud console
+      - ./google_client_secret.json:/secrets/google_client_secret.json:ro
+    restart: unless-stopped
+    depends_on:
+      - nats
+      - redis
+      - imagorvideo
+      - db
+    command: server
+    env_file: .env
+
+  thumbnailer:
+    image: jjstyle0/eventpix:latest
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      # if storing events media locally on filesystem - must be same src/dest directory as server
+      - ./data/server:/data/
+      # downloaded from google cloud console
+      - ./google_client_secret.json:/secrets/google_client_secret.json:ro
+    restart: unless-stopped
+    depends_on:
+      - server
+    deploy:
+      mode: replicated
+      replicas: 2
+    command: thumbnailer
+    env_file: .env
+
+  nats:
+    image: nats
+    container_name: nats
+
+  redis:
+    image: redis
+    container_name: redis
+
+  imagorvideo:
+    image: shumc/imagorvideo
+    container_name: imagorvideo
+    command: -imagor-unsafe
+    restart: unless-stopped
+
+  db:
+    image: lscr.io/linuxserver/mariadb:latest
+    container_name: db
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+      - MYSQL_DATABASE=eventpix
+      - MYSQL_USER=eventpix
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
+    volumes:
+      - ./data/db:/config
+    healthcheck:
+      test: ["CMD", "mariadb" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10

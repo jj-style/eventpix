@@ -1,0 +1,38 @@
+server:
+  address: 0.0.0.0:8080
+  environment: production
+  serverUrl: https://external-server-url.com
+  # docker container name + port for thumbnailer to call
+  internalServerUrl: http://server:8080
+  secretKey: "<SECRET KEY>"
+  # unlikely to need this if running in single event mode
+  formbeeKey: "<FORMBEE KEY>"
+  singleEventMode: true
+
+oauth:
+  google:
+    secretsFile: "/path/to/google/client/secret.json"
+    appId: "<GOOGLE APP_ID>"
+    redirectUri: https://<SERVER_URL>/oauth2/redirect/google
+
+database:
+  # if using mysql - parseTime=true is required
+  driver: mysql
+  uri: eventpix:<DATABASE PASSWORD>@tcp(db:3306)/eventpix?parseTime=true
+  
+  #driver: sqlite
+  #uri: /path/to/db.sqlite
+
+  encryptionKey: "<DATABASE ENCRYPTION KEY>"
+
+nats:
+  inProcess: false
+  url: "nats:4222"
+
+imagor:
+  url: http://imagorvideo:8000
+
+cache:
+  ttl: 3600
+  mode: redis
+  uri: "redis:6379"

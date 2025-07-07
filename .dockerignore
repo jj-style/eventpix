@@ -38,3 +38,4 @@ LICENSE
 README.md
 .gitignore
 docker/docker-compose.yml
+examples/
