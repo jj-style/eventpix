@@ -6,6 +6,7 @@ server:
   secretKey: CHANGEME
   formbeeKey: APIKEY
   singleEventMode: true
+  disableSignups: false
 oauth:
   google:
     secretsFile: 'TODO'

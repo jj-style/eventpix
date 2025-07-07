@@ -8,6 +8,8 @@ server:
   # unlikely to need this if running in single event mode
   formbeeKey: "<FORMBEE KEY>"
   singleEventMode: true
+  # signups only enabled anyway if singleEventMode is true
+  disableSignups: false
 
 oauth:
   google:

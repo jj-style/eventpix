@@ -1,7 +1,9 @@
 {{ define "head" }}{{ end }} {{ define "content" }}
 <div class="container">
   <h1>Login</h1>
+  {{ if $.showRegister }}
   <span>New user? <a href="/register">Register</a>.</span>
+  {{ end }}
   <form hx-post="/auth/login" hx-ext='json-enc'>
     <div class="form-group">
       <label for="inputUsername">Username</label>

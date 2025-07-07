@@ -41,6 +41,10 @@ import (
 //go:embed assets/templates/*
 var content embed.FS
 
+var (
+	showRegister bool = false
+)
+
 func createRenderer() multitemplate.Renderer {
 	r := multitemplate.NewRenderer()
 	fm := template.FuncMap{
@@ -131,7 +135,8 @@ func handleUi(r *gin.Engine, htmx *htmx.HTMX, db db.DB, svc service.EventpixServ
 
 	// public view
 	hr.GET("/login", authRedirectMiddleware, getLoginForm())
-	if !cfg.Server.SingleEventMode {
+	if !cfg.Server.SingleEventMode && !cfg.Server.DisableSignups {
+		showRegister = true
 		hr.GET("/register", authRedirectMiddleware, getRegisterForm())
 	}
 	hr.GET("/event/:id", getEvent(svc))
@@ -469,9 +474,10 @@ func setActiveEvent(svc service.EventpixService) gin.HandlerFunc {
 func getIndex() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index", gin.H{
-			"title":    "eventpix",
-			"features": templatedata.IndexFeatures,
-			"pricing":  templatedata.IndexPriceTiers,
+			"title":        "eventpix",
+			"features":     templatedata.IndexFeatures,
+			"pricing":      templatedata.IndexPriceTiers,
+			"showRegister": showRegister,
 			"nav": gin.H{
 				"dark": true,
 				"items": []gin.H{
@@ -509,10 +515,11 @@ func getProfile(oauthCfg *config.OauthSecrets) gin.HandlerFunc {
 			}
 		}
 		c.HTML(200, "profile", gin.H{
-			"title":       "Profile",
-			"user":        user,
-			"googleToken": googleToken,
-			"oauthConfig": oauthCfg,
+			"title":        "Profile",
+			"user":         user,
+			"googleToken":  googleToken,
+			"oauthConfig":  oauthCfg,
+			"showRegister": showRegister,
 			"nav": gin.H{
 				"dark": true,
 				"items": []gin.H{
@@ -540,7 +547,8 @@ func getProfile(oauthCfg *config.OauthSecrets) gin.HandlerFunc {
 func getLoginForm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(200, "login", gin.H{
-			"title": "Login",
+			"title":        "Login",
+			"showRegister": showRegister,
 			"nav": gin.H{
 				"dark": true,
 				"items": []gin.H{
@@ -557,7 +565,8 @@ func getLoginForm() gin.HandlerFunc {
 func getRegisterForm() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.HTML(200, "register", gin.H{
-			"title": "Register",
+			"title":        "Register",
+			"showRegister": showRegister,
 			"nav": gin.H{
 				"dark": true,
 				"items": []gin.H{
@@ -585,8 +594,9 @@ func getCreateEvent() gin.HandlerFunc {
 			{Name: "Google", Value: "google", Disabled: user.GoogleDriveToken == nil},
 		}
 		c.HTML(200, "createEvent", gin.H{
-			"title": "New Event",
-			"user":  c.MustGet(gin.AuthUserKey).(*db.User),
+			"title":        "New Event",
+			"user":         c.MustGet(gin.AuthUserKey).(*db.User),
+			"showRegister": showRegister,
 			"nav": gin.H{
 				"dark": true,
 				"items": []gin.H{
@@ -621,10 +631,11 @@ func getEvents(svc service.EventpixService, cfg *config.Server) gin.HandlerFunc 
 		}
 
 		c.HTML(200, "listEvents", gin.H{
-			"title":  "Events",
-			"events": events.GetEvents(),
-			"user":   user,
-			"config": cfg,
+			"title":        "Events",
+			"events":       events.GetEvents(),
+			"user":         user,
+			"showRegister": showRegister,
+			"config":       cfg,
 			"nav": gin.H{
 				"dark": true,
 				"items": []gin.H{

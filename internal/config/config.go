@@ -20,6 +20,7 @@ type Server struct {
 	SecretKey         string `mapstructure:"secretKey"`
 	FormbeeKey        string `mapstructure:"formbeeKey"`
 	SingleEventMode   bool   `mapstructure:"singleEventMode"`
+	DisableSignups    bool   `mapstructure:"disableSignups"`
 }
 
 type Database struct {

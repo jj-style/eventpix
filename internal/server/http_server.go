@@ -51,7 +51,7 @@ func NewHttpServer(
 	authGroup := r.Group("/auth")
 	authGroup.Use(htmxMiddleware)
 	authGroup.POST("/login", authService.Login)
-	if !cfg.Server.SingleEventMode {
+	if !cfg.Server.SingleEventMode && !cfg.Server.DisableSignups {
 		authGroup.POST("/register", authService.Register)
 	}
 	authGroup.GET("/logout", authRequired, authService.Logout)

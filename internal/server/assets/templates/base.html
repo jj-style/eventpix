@@ -48,7 +48,9 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="/login">Login</a></li>
+                            {{ if $.showRegister }}
                             <li><a class="dropdown-item" href="/register">Register</a></li>
+                            {{ end }}
                         </ul>
                     </li>
                     {{ end }}
