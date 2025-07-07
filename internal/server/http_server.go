@@ -36,7 +36,12 @@ func NewHttpServer(
 	googleOauthConfig *oauth2.Config,
 	validator validate.Validator,
 ) *http.Server {
-
+	switch cfg.Server.Environment {
+	case "production":
+		gin.SetMode(gin.ReleaseMode)
+	default:
+		gin.SetMode(gin.DebugMode)
+	}
 	r := gin.New()
 	r.Use(gin.Logger())
 	r.Use(gin.Recovery())
