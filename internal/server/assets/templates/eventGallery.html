@@ -55,18 +55,19 @@
                         hx-post='/upload'
                         hx-target="#uploadFormResult"
                         hx-target-error="#uploadFormError"
-                        hx-disabled-elt="find button"
+                        hx-disabled-elt="find button[type='submit'], find button[type='reset']"
                         hx-indicator="#upload-indicator"
                     >
                         <input type="hidden" id="event.Id" name="eventId" value="{{.event.Id}}">
                         <div class="form-group mb-2">
                             <label for="files" class="form-label">Select files</label>
-                            <input class="form-control" type="file" name="files" id="files" multiple>
+                            <input class="form-control" type="file" name="files" id="files" multiple required>
                         </div>
                         <button type="submit" class="btn btn-primary">
-                        <span id="upload-indicator" class="spinner-border spinner-border-sm htmx-indicator spinner" role="status" aria-hidden="true"></span>
-                        Upload
+                            <span id="upload-indicator" class="spinner-border spinner-border-sm htmx-indicator spinner" role="status" aria-hidden="true"></span>
+                            Upload
                         </button>
+                        <button type="reset" class="btn btn-secondary">Reset</button>
                     </form>
                 </div>
                 <div id="uploadFormResult"></div>
