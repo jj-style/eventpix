@@ -74,6 +74,6 @@ services:
     volumes:
       - ./data/db:/config
     healthcheck:
-      test: ["CMD", "mariadb" ,"ping", "-h", "localhost"]
+      test: ["CMD", "mariadb-admin" ,"ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
