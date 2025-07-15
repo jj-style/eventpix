@@ -80,7 +80,7 @@
 
     <div class="row text-center">
         <h1 class="delius-swash-caps-regular">{{.event.Name}}</h1>
-        <i class="bi bi-camera" style="font-size: 2rem;"></i>
+        <i class="bi bi-camera" style="font-size: 2rem;" {{ if .event.Live }} data-bs-toggle="modal" data-bs-target="#uploadModal"{{ end }}></i>
     </div>
     <!-- image grid -->
     <div class="card-columns" 
