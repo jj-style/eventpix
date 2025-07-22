@@ -83,13 +83,16 @@
         <i class="bi bi-camera" style="font-size: 2rem;" {{ if .event.Live }} data-bs-toggle="modal" data-bs-target="#uploadModal"{{ end }}></i>
     </div>
     <!-- image grid -->
-    <div class="card-columns" 
+    <div class="masonry-grid" 
         id="lightgallery"
         hx-ext="sse"
         sse-connect="/sse"
         sse-swap="new-thumbnail:{{.event.Id}}"
-        hx-swap="afterbegin" 
+        hx-swap="afterbegin"
     >
+        <!-- masonry fluid grid stuff -->
+        <div class="grid-sizer"></div>
+
         <!-- initial load -->
         <span hx-get="/thumbnails/{{.event.Id}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-indicator="#loading-gallery-indicator"></span>
     </div>
@@ -114,6 +117,8 @@
 {{ end }}
 
 {{ define "scripts" }}
+<script src="/static/scripts/masonry/masonry.pkgd.min.js"></script>
+<script src="/static/scripts/imagesloaded/imagesloaded.pkgd.min.js"></script>
 <script src="/static/scripts/lightgallery/lightgallery.min.js"></script>
 <script src="/static/scripts/lightgallery/plugins/thumbnail/lg-thumbnail.min.js"></script>
 <script src="/static/scripts/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
@@ -135,10 +140,31 @@
         });
         document.body.addEventListener("refreshGallery", function() {
             lgallery.refresh();
+            $grid.masonry('reloadItems');
+            $grid.masonry('layout');
         })
         document.body.addEventListener('htmx:sseMessage', function (e) {
             lgallery.refresh();
+            
+            // once new image loaded relay the grid
+            $(e.detail.data).imagesLoaded(function() {
+                $grid.masonry( 'prepended', $(e.detail.data) );
+                $grid.masonry('reloadItems');
+                $grid.masonry('layout');
+            });
         })
+
+        // initialize masonry for image grid
+        var $grid = $('.masonry-grid').masonry({
+            itemSelector: '.grid-item',
+            columnWidth: '.grid-sizer',
+            percentPosition: true,
+        });
+        
+        // reset masonry layout when images are loaded
+        $grid.imagesLoaded().progress( function() {
+            $grid.masonry('layout');
+        });
     });
 </script>
 {{ end }}

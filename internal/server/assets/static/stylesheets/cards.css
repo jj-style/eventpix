@@ -1,36 +1,32 @@
-/* default */
-.card-columns {
-    column-count: 2;
-    column-gap: 0;
+/* 3 columns by default */
+.grid-sizer,
+.grid-item {
+  width: 33.333%;
 }
 
-/* small */
-@media (min-width: 576px) {
-    .card-columns {
-        column-count: 3;
-    }
-}
-/* large */
-@media (min-width: 992px) {
-    .card-columns {
-        column-count: 4;
-    }
+@media screen and (min-width: 600px) {
+  .grid-sizer,
+  .grid-item {
+    width: 25%;
+  }
 }
 
-/* xl */
-@media (min-width: 1400px) {
-    .card-columns {
-        column-count: 5;
-    }
+@media screen and (min-width: 900px) {
+  /* 5 columns for larger screens */
+  .grid-sizer,
+  .grid-item {
+    width: 20%;
+  }
 }
 
-.lb-image, .lb-dataContainer {
- max-width: 100%;
- height: auto !important;
- width: 100%;
+.lb-image,
+.lb-dataContainer {
+  max-width: 100%;
+  height: auto !important;
+  width: 100%;
 }
 
 .lb-outerContainer {
- max-width: 100%;
- height: auto !important;
+  max-width: 100%;
+  height: auto !important;
 }

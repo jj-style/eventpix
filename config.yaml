@@ -14,11 +14,11 @@ oauth:
     redirectUri: 'TODO'
 database:
   driver: sqlite
-  # uri: ./scratch/test.db
+  uri: ./scratch/test.db
   # driver: mysql
   # uri: dbuser:dbpwd@tcp(127.0.0.1:3306)/eventpix?parseTime=true
   encryptionKey: A/vDd4Jk3fF8dgrjhkVf2qA950jSFw+wwzAqsWEHQqo=
-  uri: file::memory:?cache=shared
+  # uri: file::memory:?cache=shared
 nats:
   inProcess: true
   url: "127.0.0.1:4222"
