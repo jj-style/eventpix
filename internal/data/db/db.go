@@ -137,7 +137,7 @@ func (d *dbImpl) SetEventLive(ctx context.Context, id uint64, live bool) (*Event
 }
 
 func (d *dbImpl) DeleteEvent(ctx context.Context, id uint64) error {
-	return d.db.WithContext(ctx).Delete(&Event{}, id).Error
+	return d.db.WithContext(ctx).Unscoped().Delete(&Event{}, id).Error
 }
 
 func (d *dbImpl) GetEvents(ctx context.Context, userId uint) ([]*Event, error) {
