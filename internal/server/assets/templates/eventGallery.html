@@ -5,6 +5,8 @@
 {{ end }}
 <!-- clicking/scrolling through images -->
 <link type="text/css" rel="stylesheet" href="/static/stylesheets/lightgallery/lightgallery-bundle.min.css" />
+<!-- for video controls via videojs -->
+<link type="text/css" rel="stylesheet" href="/static/stylesheets/videojs/video-js.css" integrity="sha384-FTL3/NcK7fyX2Wjq1fJtFmQq0ZrBsTOYLSLybPXwARdpRxVO44w30lMGxfg/9lpp" crossorigin="anonymous"/>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -122,6 +124,7 @@
 <script src="/static/scripts/lightgallery/plugins/zoom/lg-zoom.min.js"></script>
 <script src="/static/scripts/lightgallery/plugins/video/lg-video.min.js"></script>
 <script src="/static/scripts/htmx/response-targets.js"></script>
+<script src="/static/scripts/videojs/video.min.js"></script>
 <script>
     window.addEventListener("load", function () {
         document.body.addEventListener("uploadComplete", function () {
@@ -133,7 +136,9 @@
             plugins: [lgZoom, lgThumbnail, lgVideo],
             speed: 500,
             selector: '.lg-item',
-            mobileSettings: {download: true, showCloseIcon: true, controls: true}
+            mobileSettings: {download: true, showCloseIcon: true, controls: true},
+            videojs: true,
+            videojsOptions: {controls: true, loop: true, autoplay: true}
             // ... other settings
         });
         document.body.addEventListener("refreshGallery", function() {
