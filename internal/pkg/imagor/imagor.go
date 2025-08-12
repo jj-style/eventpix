@@ -37,7 +37,7 @@ func (i *imagor) ThumbImage(imgUrl string) (io.ReadCloser, error) {
 }
 
 func (i *imagor) ThumbVideo(videoUrl string) (io.ReadCloser, error) {
-	url := fmt.Sprintf("%s/unsafe/300x0/7x7/filters:label(video,10,10,15,white,20):fill:format(webp)/%s", i.url, videoUrl)
+	url := fmt.Sprintf("%s/unsafe/300x0/7x7/filters:format(webp)/%s", i.url, videoUrl)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err

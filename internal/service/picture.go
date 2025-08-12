@@ -186,7 +186,7 @@ func (p *eventpixSvc) Upload(ctx context.Context, eventId uint64, filename strin
 	switch contentType {
 	case "image/png", "image/jpeg", "image/heif":
 		mt = eventsv1.NewMedia_IMAGE
-	case "video/avi", "video/mp4", "video/mpeg", "video/webm":
+	case "video/avi", "video/mp4", "video/mpeg", "video/webm", "video/quicktime":
 		mt = eventsv1.NewMedia_VIDEO
 	default:
 		return fmt.Errorf("unsupported content-type: '%s'", contentType)
